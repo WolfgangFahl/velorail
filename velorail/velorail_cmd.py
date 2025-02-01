@@ -6,9 +6,11 @@ Created on 2025-02-01
 
 import sys
 from argparse import ArgumentParser
-from ngwidgets.cmd import WebserverCmd
-from velorail.webserver import VeloRailWebServer
 
+from ngwidgets.cmd import WebserverCmd
+
+from velorail.webserver import VeloRailWebServer
+from velorail.gpxviewer import GPXViewer
 
 class VeloRailCmd(WebserverCmd):
     """
@@ -40,8 +42,24 @@ class VeloRailCmd(WebserverCmd):
             default=VeloRailWebServer.examples_path(),
             help="path to velorail files [default: %(default)s]",
         )
+        parser.add_argument("--gpx", required=False, help="URL or path to GPX file")
+        parser.add_argument(
+            "--token", required=False, help="Authentication token for GPX access"
+        )
+        parser.add_argument(
+            "--zoom",
+            type=int,
+            default=GPXViewer.default_zoom,
+            help="zoom level (default: 11)",
+        )
+        parser.add_argument(
+            "--center",
+            nargs=2,
+            type=float,
+            default=GPXViewer.default_center,
+            help="center lat,lon - default: Greenwich",
+        )
         return parser
-
 
 def main(argv: list = None):
     """

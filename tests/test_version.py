@@ -5,6 +5,7 @@ Created on 2025-02-01
 """
 
 from ngwidgets.basetest import Basetest
+
 from velorail.version import Version
 
 
@@ -20,5 +21,5 @@ class TestVersion(Basetest):
         """
         test Version object - effectively only testing the test infrastructure
         """
-        version=Version()
+        version = Version()
         self.assertIsNotNone(version)

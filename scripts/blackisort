@@ -1,6 +1,6 @@
 #!/bin/bash
-# WF 2024-01-10
-package=dcm
+# WF 2025-02-01
+package=velorail
 isort tests/*.py
 black tests/*.py
 isort $package/*.py
