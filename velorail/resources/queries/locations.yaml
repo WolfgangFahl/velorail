@@ -1,0 +1,21 @@
+'AllTrainStations':
+ sparql: |
+   #All Train Stations (in-use)
+   PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+   PREFIX wd: <http://www.wikidata.org/entity/>
+   PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+   PREFIX wdtn: <http://www.wikidata.org/prop/direct-normalized/>
+   PREFIX wikibase: <http://wikiba.se/ontology#>
+   PREFIX psv: <http://www.wikidata.org/prop/statement/value/>
+   PREFIX p: <http://www.wikidata.org/prop/>
+   SELECT DISTINCT ?item ?itemLabel ?lat ?long
+   WHERE
+   {
+     ?item wdt:P31/wdt:P279* wd:Q55488.
+     ?item rdfs:label ?itemLabel. FILTER(lang(?itemLabel)="en")
+     ?item wdt:P5817  wd:Q55654238.
+     ?item p:P625/psv:P625 [
+                      wikibase:geoLatitude ?lat;
+                      wikibase:geoLongitude ?long
+                    ] .
+   }
