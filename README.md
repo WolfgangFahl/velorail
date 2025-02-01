@@ -9,3 +9,6 @@ Multimodal bike and train route planning support
 [![API Docs](https://img.shields.io/badge/API-Documentation-blue)](https://WolfgangFahl.github.io/velorail/)
 
 [![License](https://img.shields.io/github/license/WolfgangFahl/velorail.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+
+# Demo
+[velorail](https://velorail.bitplan.com)

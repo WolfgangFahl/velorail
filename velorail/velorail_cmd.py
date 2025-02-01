@@ -38,7 +38,7 @@ class VeloRailCmd(WebserverCmd):
             "-rp",
             "--root_path",
             default=VeloRailWebServer.examples_path(),
-            help="path to pdf files [default: %(default)s]",
+            help="path to velorail files [default: %(default)s]",
         )
         return parser
 
