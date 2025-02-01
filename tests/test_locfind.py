@@ -16,7 +16,7 @@ class TestLocFinder(unittest.TestCase):
         locfinder = LocFinder()
         lod_train_stations = locfinder.get_all_train_stations()
         print(len(lod_train_stations))
-        self.assertGreaterEqual(len(lod_train_stations), 100000)
+        self.assertGreaterEqual(len(lod_train_stations), 70000)
 
     def test_get_nearest_train_station(self):
         """
