@@ -12,3 +12,6 @@ Multimodal bike and train route planning support
 
 # Demo
 [velorail](https://velorail.bitplan.com)
+
+# Documentation
+[wiki](https://wiki.bitplan.com/index.php/Velorail)
