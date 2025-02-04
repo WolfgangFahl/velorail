@@ -19,7 +19,7 @@ dependencies = [
 	# https://github.com/WolfgangFahl/velorail
     "ngwidgets>=0.21.0",
     # https://pypi.org/project/pyLodStorage/
-	"pyLodStorage>=0.12.4",
+	"pyLodStorage>=0.14.2",
     "pandas",
     "numpy",
     # https://pypi.org/project/py-ez-wikidata/
