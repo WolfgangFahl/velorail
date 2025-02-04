@@ -45,3 +45,40 @@
                       wikibase:geoLongitude ?long
                     ] .
    }
+# Bike routes
+BikeNodes4Bounds:
+ param_list:
+   - name: south
+     type: float
+     default_value: 52.8349
+   - name: west
+     type: float
+     default_value: 5.3184
+   - name: north
+     type: float
+     default_value: 53.0125
+   - name: east
+     type: float
+     default_value: 5.8279
+ sparql: |
+   PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+   PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+   PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>
+   PREFIX osmway: <https://www.openstreetmap.org/way/>
+
+   SELECT DISTINCT ?node ?name ?bicycle_type ?ref ?network ?surface ?lat ?lon ?nodeLabel
+   WHERE {
+     ?node osmkey:bicycle ?bicycle_type .
+     ?node geo:hasGeometry/geo:asWKT ?loc .
+     BIND(geof:latitude(?loc) AS ?lat)
+     BIND(geof:longitude(?loc) AS ?lon)
+     FILTER(?lat >= {{south}} && ?lat <= {{north}} && ?lon >= {{west}} && ?lon <= {{east}})
+
+     OPTIONAL { ?node osmkey:name ?name }
+     OPTIONAL { ?node osmkey:ref ?ref }
+     OPTIONAL { ?node osmkey:network ?network }
+     OPTIONAL { ?node osmkey:surface ?surface }
+
+     BIND(COALESCE(?name, ?ref, "Unnamed node") AS ?nodeLabel)
+   }
+   ORDER BY ?nodeLabel

@@ -1,3 +1,9 @@
+"""
+Created on 2025-02-01
+
+@author: th
+"""
+import json
 from velorail.locfind import LocFinder
 from ngwidgets.basetest import Basetest
 
@@ -72,5 +78,20 @@ class TestLocFinder(Basetest):
         results = locfinder.get_train_stations_by_coordinates(lat, long, distance)
         print(results)
         self.assertGreaterEqual(len(results), 30)
+
+    def test_get_bike_nodes_heeg_stavoren(self):
+        """
+        test getting bike nodes in the Heeg/Stavoren area of Friesland
+        """
+        # Bounding box for Heeg/Stavoren area
+        south = 52.8349  # Southern boundary
+        west = 5.3184   # Western boundary
+        north = 53.0125  # Northern boundary
+        east = 5.8279   # Eastern boundary
+
+        locfinder = LocFinder()
+        bike_routes = locfinder.get_bike_nodes_by_bounds(south, west, north, east)
+        if self.debug:
+            print(json.dumps(bike_routes,indent=2))
 
 

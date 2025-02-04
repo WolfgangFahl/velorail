@@ -106,24 +106,53 @@ class LocFinder:
         """
         constructor
         """
-        endpoint_path = Path(__file__).parent / "resources" / "endpoints.yaml"
-        query_path = Path(__file__).parent / "resources" / "queries" / "locations.yaml"
-        if not query_path.is_file():
-            raise FileNotFoundError(f"LocFinder queries file not found: {query_path}")
+        self.endpoint_path = Path(__file__).parent / "resources" / "endpoints.yaml"
+        self.query_path = Path(__file__).parent / "resources" / "queries"
+        self.locations_yaml= self.query_path / "locations.yaml"
+        if not self.locations_yaml.is_file():
+            raise FileNotFoundError(f"LocFinder queries file not found: {self.locations_yaml}")
         self.query_manager = QueryManager(
-            lang="sparql", queriesPath=query_path.as_posix()
+            lang="sparql", queriesPath=self.locations_yaml.as_posix()
         )
-        self.endpoint_manager = EndpointManager.getEndpoints(endpoint_path.as_posix())
+        self.endpoints = EndpointManager.getEndpoints(self.endpoint_path.as_posix())
 
     def query(self,query_name:str,param_dict:dict={},endpoint:str="wikidata-qlever"):
         """
         get the result of the given query
         """
         query: Query = self.query_manager.queriesByName.get(query_name)
-        sparql_endpoint = self.endpoint_manager[endpoint]
+        if not query:
+            raise ValueError(f"{query_name} is not defined!")
+        sparql_endpoint = self.endpoints[endpoint]
         endpoint = SPARQL(sparql_endpoint.endpoint)
         qres = endpoint.queryAsListOfDicts(query.query,param_dict=param_dict)
         return qres
+
+    def get_bike_nodes_by_bounds(self, south: float, west: float, north: float, east: float):
+        """
+        Get all bike nodes within the given bounding box
+
+        Args:
+            south: Southern latitude boundary
+            west: Western longitude boundary
+            north: Northern latitude boundary
+            east: Eastern longitude boundary
+
+        Returns:
+            list of dicts containing bike route information
+        """
+        param_dict = {
+            "south": south,
+            "west": west,
+            "north": north,
+            "east": east
+        }
+        lod = self.query(
+            query_name="BikeNodes4Bounds",
+            param_dict=param_dict,
+            endpoint="osm-sophox"  # Using Sophox endpoint for OSM data
+        )
+        return lod
 
     def get_wikidata_geo(self, qid: str) -> WikidataGeoItem:
         """

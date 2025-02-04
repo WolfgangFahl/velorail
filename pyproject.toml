@@ -66,3 +66,4 @@ only-include = ["velorail","velorail_examples"]
 [project.scripts]
 velorail = "velorail.velorail_cmd:main"
 gpxviewer = "velorail.velorail_cmd:main"
+rel2wiki = "velorail.rel2wiki:main"
