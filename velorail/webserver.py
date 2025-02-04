@@ -9,11 +9,13 @@ import re
 
 from ngwidgets.input_webserver import InputWebserver, InputWebSolution
 from ngwidgets.webserver import WebserverConfig
+from ngwidgets.widgets import Link
 from nicegui import Client, ui
 
 from velorail.gpxviewer import GPXViewer
 from velorail.version import Version
-
+from velorail.wditem_search import WikidataItemSearch
+from velorail.locfind import LocFinder
 
 class VeloRailSolution(InputWebSolution):
     """
@@ -45,6 +47,31 @@ class VeloRailSolution(InputWebSolution):
         """
         # Regex to match and remove SMW markers
         return re.sub(r"\[\[SMW::(on|off)\]\]", "", input_str)
+
+    async def show_wikidata_item(
+        self,
+        qid: str = None
+    ):
+        """
+        show the given wikidata item on the map
+        Args:
+            qid(str): the Wikidata id of the item to analyze
+        """
+        def show():
+            viewer=self.viewer
+            # Create LocFinder and get coordinates
+            locfinder = LocFinder()
+            center=None
+            lod = locfinder.query(query_name="WikidataGeo", param_dict={"qid": qid})
+            if len(lod) >= 1:
+                record = lod[0]
+                lat = float(record["lat"])
+                lon = float(record["lon"])
+                # Set the center of the viewer to the found coordinates
+                center = [lat, lon]
+            viewer.show(center=center)
+
+        await self.setup_content_div(show)
 
     async def show_lines(
         self,
@@ -103,6 +130,39 @@ class VeloRailSolution(InputWebSolution):
                 "Please provide a GPX file via 'gpx' query parameter or the command line."
             )
 
+    def prepare_ui(self):
+        """
+        overrideable configuration
+        """
+        self.endpoint_name = self.args.endpointName
+        self.lang = "en"  # FIXME make configurable
+
+    async def home(self):
+        """
+        provide the main content page
+        """
+
+        def record_filter(qid: str, record: dict):
+            if "label" and "desc" in record:
+                text = f"""{record["label"]}({qid})☞{record["desc"]}"""
+                map_link = Link.create(f"/wd/{qid}", text)
+                # getting the link to be at second position
+                # is a bit tricky
+                temp_items = list(record.items())
+                # Add the new item in the second position
+                temp_items.insert(1, ("map", map_link))
+
+                # Clear the original dictionary and update it with the new order of items
+                record.clear()
+                record.update(temp_items)
+
+        def show():
+            self.wd_item_search = WikidataItemSearch(
+                self, record_filter=record_filter, lang=self.lang
+            )
+
+        await self.setup_content_div(show)
+
 
 class VeloRailWebServer(InputWebserver):
     """WebServer class that manages the server for velorail"""
@@ -124,6 +184,15 @@ class VeloRailWebServer(InputWebserver):
         """Constructs all the necessary attributes for the WebServer object."""
         InputWebserver.__init__(self, config=VeloRailWebServer.get_config())
 
+        @ui.page("/wd/{qid}")
+        async def wikidata_item_page(client: Client, qid: str):
+            """
+            show the given wikidata item on the map
+            """
+            await self.page(
+                client,VeloRailSolution.show_wikidata_item, qid
+            )
+
         @ui.page("/lines")
         async def lines_page(
             client: Client,
@@ -135,7 +204,7 @@ class VeloRailWebServer(InputWebserver):
             Endpoint to display routes based on 'lines' parameter.
             """
             await self.page(
-                client, VeloRailSolution.show_lines,lines, auth_token, zoom
+                client, VeloRailSolution.show_lines, lines, auth_token, zoom
             )
 
         @ui.page("/gpx")
@@ -148,7 +217,7 @@ class VeloRailWebServer(InputWebserver):
             """
             GPX viewer page with optional gpx_url and auth_token.
             """
-            await self.page(client, VeloRailSolution.show_gpx,gpx, auth_token, zoom)
+            await self.page(client, VeloRailSolution.show_gpx, gpx, auth_token, zoom)
 
     def configure_run(self):
         root_path = (

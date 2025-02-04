@@ -7,10 +7,12 @@ Created on 2025-02-01
 import sys
 from argparse import ArgumentParser
 
+from lodstorage.query import EndpointManager
 from ngwidgets.cmd import WebserverCmd
 
-from velorail.webserver import VeloRailWebServer
 from velorail.gpxviewer import GPXViewer
+from velorail.webserver import VeloRailWebServer
+
 
 class VeloRailCmd(WebserverCmd):
     """
@@ -22,7 +24,7 @@ class VeloRailCmd(WebserverCmd):
         constructor
         """
         config = VeloRailWebServer.get_config()
-        WebserverCmd.__init__(self, config, VeloRailWebServer, DEBUG)
+        WebserverCmd.__init__(self, config, VeloRailWebServer)
         pass
 
     def getArgParser(self, description: str, version_msg) -> ArgumentParser:
@@ -30,6 +32,12 @@ class VeloRailCmd(WebserverCmd):
         override the default argparser call
         """
         parser = super().getArgParser(description, version_msg)
+        parser.add_argument(
+            "-en",
+            "--endpointName",
+            default="wikidata",
+            help=f"Name of the endpoint to use for queries. Available by default: {EndpointManager.getEndpointNames(lang='sparql')}",
+        )
         parser.add_argument(
             "-v",
             "--verbose",
@@ -61,6 +69,7 @@ class VeloRailCmd(WebserverCmd):
         )
         return parser
 
+
 def main(argv: list = None):
     """
     main call
@@ -70,8 +79,5 @@ def main(argv: list = None):
     return exit_code
 
 
-DEBUG = 0
 if __name__ == "__main__":
-    if DEBUG:
-        sys.argv.append("-d")
     sys.exit(main())

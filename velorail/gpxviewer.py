@@ -28,7 +28,6 @@ class GPXViewer:
     default_center = [51.4934, 0.0098]  # greenwich
     default_zoom = 11
 
-
     @classmethod
     def from_url(cls, gpx_url) -> "GPXViewer":
         viewer = cls()

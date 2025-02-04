@@ -18,9 +18,12 @@ license= "Apache-2.0"
 dependencies = [
 	# https://github.com/WolfgangFahl/velorail
     "ngwidgets>=0.21.0",
-    "pylodstorage",
+    # https://pypi.org/project/pyLodStorage/
+	"pyLodStorage>=0.12.4",
     "pandas",
-    "numpy"
+    "numpy",
+    # https://pypi.org/project/py-ez-wikidata/
+	"py-ez-wikidata>=0.2.3"
  ]
 
 requires-python = ">=3.9"
