@@ -65,8 +65,9 @@ class VeloRailSolution(InputWebSolution):
             wd_item = locfinder.get_wikidata_geo(qid)
             if wd_item:
                 wd_link=wd_item.as_wd_link()
+                wd_maps=wd_item.get_map_links(zoom=self.viewer.zoom)
                 # create markup with links
-                markup=f"{wd_link}"
+                markup=f"{wd_link}&nbsp;{wd_maps}"
                 ui.html(markup)
                 center = [wd_item.lat, wd_item.lon]
             viewer.show(center=center)

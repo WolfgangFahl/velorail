@@ -6,6 +6,9 @@ class TestLocFinder(Basetest):
     test locfinder
     """
 
+    def setUp(self, debug=True, profile=True):
+        Basetest.setUp(self, debug=debug, profile=profile)
+
     def test_wikidata_loc(self):
         """
         test finding location of a wikidata item
@@ -31,6 +34,22 @@ class TestLocFinder(Basetest):
                 self.assertAlmostEqual(float(record[key]), expected_value, places=3)
             else:
                 self.assertEqual(record[key], expected_value)
+
+    def test_wikidata_item_maps(self):
+        """
+        test WikidataGeoItem map link generation
+        """
+        locfinder = LocFinder()
+        # Test with San Sebastian station (Q14314)
+        qid = "Q14314"
+        # Get the WikidataGeoItem
+        wd_item = locfinder.get_wikidata_geo(qid)
+        self.assertIsNotNone(wd_item)
+
+        # Get map links
+        map_links = wd_item.get_map_links()
+        if self.debug:
+            print(map_links)
 
     def test_get_train_stations(self):
         """

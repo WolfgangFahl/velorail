@@ -150,6 +150,15 @@ class LegStyles:
                 dashArray="15,10",
                 opacity=0.8,
             ),
+            "foot": LegStyle(
+               leg_type="foot",
+               point_type="waypoint",
+               color="#FFD700", #  yellow
+               utf8_icon="👣",
+               weight=2,
+               dashArray="5,5",
+               opacity=0.9,
+            ),
             "bus": LegStyle(
                 leg_type="bus",
                 point_type="bus_stop",

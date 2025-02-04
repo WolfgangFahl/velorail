@@ -12,6 +12,7 @@ from lodstorage.sparql import SPARQL
 from lodstorage.yamlable import lod_storable
 from typing import Optional
 from ngwidgets.widgets import Link
+from velorail.tour import LegStyles
 
 @lod_storable
 class WikidataGeoItem:
@@ -28,6 +29,54 @@ class WikidataGeoItem:
         text = f"""{self.label}({self.qid})☞{self.description}"""
         wd_link = Link.create(f"https://www.wikidata.org/wiki/{self.qid}", text)
         return wd_link
+
+    def get_map_links(self, leg_styles:Optional[LegStyles]=None, zoom:int=14) -> str:
+        """
+        Get HTML markup with icons grouped by map type
+        """
+        if leg_styles is None:
+            leg_styles = LegStyles.default()
+
+        map_links = {
+            "openstreetmap.org": ["car", "bus", "plane"],
+            "opencyclemap.org": ["bike"],
+            "openrailwaymap.org": ["train"],
+            "map.openseamap.org": ["ferry"],
+            "hiking.waymarkedtrails.org": ["foot"]
+        }
+
+        markup = ""
+        delim=""
+        for map_url, leg_types in map_links.items():
+            icons=""
+            for leg_type in leg_types:
+                leg_style=leg_styles.get_style(leg_type)
+                icons+=leg_style.utf8_icon
+            tooltip = f"{','.join(leg_types)} map"
+            if "car" in leg_types:
+                url = f"https://{map_url}/#?map={zoom}/{self.lat}/{self.lon}&layers=standard"
+            elif "foot" in leg_types:
+                url = f"https://{map_url}/#?map={zoom}/{self.lat}/{self.lon}"
+            else:
+                url = f"https://{map_url}/?zoom={zoom}&lat={self.lat}&lon={self.lon}"
+            link=Link.create(url, text=icons, tooltip=tooltip, target="_blank")
+            markup+=link+delim
+            delim="\n"
+        return markup
+
+    @property
+    def osm_url(self, map_type:str= "street", zoom: int = 15) -> str:
+        """
+        Get OpenStreetMap URL for this location
+
+        Args:
+            zoom: Zoom level (default=15)
+
+        Returns:
+            OpenStreetMap URL for the location
+        """
+        osm_url=f"https://www.open{map_type}map.org/?mlat={self.lat}&mlon={self.lon}&zoom={zoom}"
+        return osm_url
 
     @classmethod
     def from_record(cls, record: dict) -> 'WikidataGeoItem':
