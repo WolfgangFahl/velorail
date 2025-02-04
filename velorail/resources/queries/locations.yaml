@@ -7,15 +7,23 @@
       type: str
       default_value: "Q300706" # Aachen main station
   sparql: |
-    PREFIX wd: <http://www.wikidata.org/entity/>
-    PREFIX wdt: <http://www.wikidata.org/prop/direct/>
-    PREFIX wikibase: <http://wikiba.se/ontology#>
-    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
-    SELECT ?lat ?lon WHERE {
-      wd:{{qid}} wdt:P625 ?coord .
-      BIND(geof:latitude(?coord) as ?lat)
-      BIND(geof:longitude(?coord) as ?lon)
-    }
+        PREFIX wd: <http://www.wikidata.org/entity/>
+        PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+        PREFIX wikibase: <http://wikiba.se/ontology#>
+        PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX schema: <http://schema.org/>
+
+        SELECT ?lat ?lon ?label ?description WHERE {
+          wd:{{qid}} wdt:P625 ?coord ;
+                     rdfs:label ?label ;
+                     schema:description ?description .
+          FILTER(LANG(?label) = "en")
+          FILTER(LANG(?description) = "en")
+
+          BIND(geof:latitude(?coord) as ?lat)
+          BIND(geof:longitude(?coord) as ?lon)
+        }
 'AllTrainStations':
  sparql: |
    #All Train Stations (in-use)

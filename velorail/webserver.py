@@ -62,13 +62,13 @@ class VeloRailSolution(InputWebSolution):
             # Create LocFinder and get coordinates
             locfinder = LocFinder()
             center=None
-            lod = locfinder.query(query_name="WikidataGeo", param_dict={"qid": qid})
-            if len(lod) >= 1:
-                record = lod[0]
-                lat = float(record["lat"])
-                lon = float(record["lon"])
-                # Set the center of the viewer to the found coordinates
-                center = [lat, lon]
+            wd_item = locfinder.get_wikidata_geo(qid)
+            if wd_item:
+                wd_link=wd_item.as_wd_link()
+                # create markup with links
+                markup=f"{wd_link}"
+                ui.html(markup)
+                center = [wd_item.lat, wd_item.lon]
             viewer.show(center=center)
 
         await self.setup_content_div(show)
@@ -143,8 +143,13 @@ class VeloRailSolution(InputWebSolution):
         """
 
         def record_filter(qid: str, record: dict):
+            """
+            filter the given search record
+            """
             if "label" and "desc" in record:
-                text = f"""{record["label"]}({qid})☞{record["desc"]}"""
+                desc=record["desc"]
+                label=record["label"]
+                text = f"""{label}({qid})☞{desc}"""
                 map_link = Link.create(f"/wd/{qid}", text)
                 # getting the link to be at second position
                 # is a bit tricky

@@ -10,9 +10,8 @@ from typing import Callable
 from ez_wikidata.wdsearch import WikidataSearch
 from ngwidgets.lod_grid import ListOfDictsGrid
 from ngwidgets.webserver import WebSolution
-from ngwidgets.widgets import Link
+from ngwidgets.widgets import Lang,Link
 from nicegui import ui
-
 
 class WikidataItemSearch:
     """
@@ -31,6 +30,8 @@ class WikidataItemSearch:
         """
         self.solution = solution
         self.lang = lang
+        # Get available languages
+        self.languages = Lang.get_language_dict()
         self.record_filter = record_filter
         self.limit = 9
         self.wd_search = WikidataSearch(lang)
@@ -45,6 +46,13 @@ class WikidataItemSearch:
         """
         with ui.card().style("width: 25%"):
             with ui.grid(rows=1, columns=4):
+                # Create a label to display the chosen language with the default language
+                self.lang_label = ui.label(self.lang)
+                # Create a dropdown for language selection with the default language selected
+                # Bind the label text to the selection's value, so it updates automatically
+                ui.select(self.languages, value=self.lang).bind_value(
+                    self.lang_label, "text"
+                )
                 ui.label("limit:")
                 self.limit_slider = (
                     ui.slider(min=2, max=50, value=self.limit)
@@ -79,7 +87,7 @@ class WikidataItemSearch:
             search_for = self.search_input.value
             if self.search_result_row:
                 with self.search_result_row:
-                    lang = self.lang
+                    lang = self.lang_label.text
                     ui.notify(f"searching wikidata for {search_for} ({lang})...")
                     self.wd_search.language = lang
                     wd_search_result = self.wd_search.searchOptions(

@@ -13,16 +13,24 @@ class TestLocFinder(Basetest):
         locfinder = LocFinder()
         # Test with Gare de Biarritz (Q1959795)
         qid = "Q1959795"
+        expected = {
+            "lat": 43.4592,
+            "lon": -1.5459,
+            "label": "Gare de Biarritz",
+            "description": "railway station in Biarritz, France"
+        }
+
         lod = locfinder.query(query_name="WikidataGeo", param_dict={"qid": qid})
         self.assertTrue(len(lod) >= 1)
         record = lod[0]
-        # Expected coordinates for Gare de Biarritz
-        self.assertIn("lat", record)
-        self.assertIn("lon", record)
-        lat = float(record["lat"])
-        lon = float(record["lon"])
-        self.assertAlmostEqual(lat, 43.4592, places=3)
-        self.assertAlmostEqual(lon, -1.5459, places=3)
+
+        # Check all fields are present with expected values
+        for key, expected_value in expected.items():
+            self.assertIn(key, record)
+            if isinstance(expected_value, float):
+                self.assertAlmostEqual(float(record[key]), expected_value, places=3)
+            else:
+                self.assertEqual(record[key], expected_value)
 
     def test_get_train_stations(self):
         """

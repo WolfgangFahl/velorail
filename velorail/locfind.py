@@ -9,7 +9,44 @@ import numpy as np
 import pandas as pd
 from lodstorage.query import EndpointManager, Query, QueryManager
 from lodstorage.sparql import SPARQL
-from lodstorage.params import Params
+from lodstorage.yamlable import lod_storable
+from typing import Optional
+from ngwidgets.widgets import Link
+
+@lod_storable
+class WikidataGeoItem:
+    """
+    Dataclass for storing Wikidata geographical location data with labels
+    """
+    qid: str
+    lat: float
+    lon: float
+    label: Optional[str]=None
+    description: Optional[str]=None
+
+    def as_wd_link(self)->Link:
+        text = f"""{self.label}({self.qid})☞{self.description}"""
+        wd_link = Link.create(f"https://www.wikidata.org/wiki/{self.qid}", text)
+        return wd_link
+
+    @classmethod
+    def from_record(cls, record: dict) -> 'WikidataGeoItem':
+        """
+        Create WikidataGeoItem from a dictionary record
+
+        Args:
+            record: Dictionary containing lat, lon, label and description
+
+        Returns:
+            WikidataGeoRecord instance
+        """
+        return cls(
+            qid=record["qid"],
+            lat=float(record["lat"]),
+            lon=float(record["lon"]),
+            label=record["label"],
+            description=record["description"]
+        )
 
 class LocFinder:
     """
@@ -38,6 +75,23 @@ class LocFinder:
         endpoint = SPARQL(sparql_endpoint.endpoint)
         qres = endpoint.queryAsListOfDicts(query.query,param_dict=param_dict)
         return qres
+
+    def get_wikidata_geo(self, qid: str) -> WikidataGeoItem:
+        """
+        Get geographical coordinates and metadata for a Wikidata item
+
+        Args:
+            qid: Wikidata QID of the item
+
+        Returns:
+            WikidataGeoItem with location data and metadata
+        """
+        lod = self.query(query_name="WikidataGeo", param_dict={"qid": qid})
+        if len(lod) >= 1:
+            record = lod[0]
+            record["qid"] = qid  # Add qid to record for WikidataGeoItem creation
+            return WikidataGeoItem.from_record(record)
+        return None
 
     def get_all_train_stations(self):
         lod = self.query(query_name="AllTrainStations")
