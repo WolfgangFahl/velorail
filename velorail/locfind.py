@@ -54,7 +54,7 @@ class WikidataGeoItem:
                 icons+=leg_style.utf8_icon
             tooltip = f"{','.join(leg_types)} map"
             if "car" in leg_types:
-                url = f"https://{map_url}/#?map={zoom}/{self.lat}/{self.lon}&layers=standard"
+                url = f"https://{map_url}/#map={zoom}/{self.lat}/{self.lon}"
             elif "foot" in leg_types:
                 url = f"https://{map_url}/#?map={zoom}/{self.lat}/{self.lon}"
             else:
