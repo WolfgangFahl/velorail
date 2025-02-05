@@ -97,22 +97,21 @@ class WikidataGeoItem:
             description=record["description"]
         )
 
-class LocFinder:
+class NPQ_Handler():
     """
-    Set of methods to lookup different location types
+    handling of named parameterized queries
     """
-
-    def __init__(self):
+    def __init__(self,yaml_file:str):
         """
         constructor
         """
         self.endpoint_path = Path(__file__).parent / "resources" / "endpoints.yaml"
         self.query_path = Path(__file__).parent / "resources" / "queries"
-        self.locations_yaml= self.query_path / "locations.yaml"
-        if not self.locations_yaml.is_file():
-            raise FileNotFoundError(f"LocFinder queries file not found: {self.locations_yaml}")
+        self.query_yaml= self.query_path / yaml_file
+        if not self.query_yaml.is_file():
+            raise FileNotFoundError(f"queries file not found: {self.query_yaml}")
         self.query_manager = QueryManager(
-            lang="sparql", queriesPath=self.locations_yaml.as_posix()
+            lang="sparql", queriesPath=self.query_yaml.as_posix()
         )
         self.endpoints = EndpointManager.getEndpoints(self.endpoint_path.as_posix())
 
@@ -127,6 +126,13 @@ class LocFinder:
         endpoint = SPARQL(sparql_endpoint.endpoint)
         qres = endpoint.queryAsListOfDicts(query.query,param_dict=param_dict)
         return qres
+
+class LocFinder(NPQ_Handler):
+    """
+    Set of methods to lookup different location types
+    """
+    def __init__(self):
+        super().__init__("locations.yaml")
 
     def get_bike_nodes_by_bounds(self, south: float, west: float, north: float, east: float):
         """

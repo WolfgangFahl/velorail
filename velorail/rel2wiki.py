@@ -30,6 +30,7 @@ class OsmRelConverter:
         self.endpoint = self.endpoints.get(args.endpoint_name)
         self.sparql = SPARQL.fromEndpointConf(self.endpoint)
         self.leg_style=LegStyles.default()
+        self.test=False
 
     @classmethod
     def get_parser(cls):
@@ -101,6 +102,7 @@ class OsmRelConverter:
             params = Params(queryString)
             queryString = params.apply_parameters_with_check(param_dict)
             print(queryString)
+            pass
         return query_result
 
     def to_mediawiki(self, rel: str, data: Dict) -> str:
@@ -156,7 +158,7 @@ https://www.openstreetmap.org/relation/{rel}
         wiki += f"\n<headertabs/>\n[[Category:{self.args.category}]]"
         return wiki
 
-    def process_relations(self, relations: List[str]):
+    def process_relations(self, relations: List[str],with_write:bool=True):
         """
         Process the given relations
 
@@ -167,19 +169,24 @@ https://www.openstreetmap.org/relation/{rel}
             json_file = os.path.join(self.tmpdir, f"osm_{rel}.json")
             wiki_file = os.path.join(self.tmpdir, f"{rel}.wiki")
 
-            print(f"Processing relation {rel}")
+            if not self.test:
+                print(f"Processing relation {rel}")
 
             # Query and save JSON
             data = self.query_rel(rel)
-            with open(json_file, 'w') as f:
-                json.dump(data, f, indent=2)
+            if with_write:
+                with open(json_file, 'w') as f:
+                    json.dump(data, f, indent=2)
 
             # Convert to wiki and save
             wiki = self.to_mediawiki(rel, data)
-            with open(wiki_file, 'w') as f:
-                f.write(wiki)
+            if with_write:
+                with open(wiki_file, 'w') as f:
+                    f.write(wiki)
 
-            print(f"Created {wiki_file}")
+            if not self.test:
+                print(f"Created {wiki_file}")
+        return data
 
 
 def main():

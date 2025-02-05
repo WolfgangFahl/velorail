@@ -1,0 +1,54 @@
+'RelationExplore':
+  # available KG relation elements for a given relid
+  param_list:
+    - name: relid
+      type: str
+      default_value: "10492086"
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>
+    PREFIX osmrel: <https://www.openstreetmap.org/relation/>
+    PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>
+    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+
+    SELECT ?rel ?p (COUNT(?o) AS ?count)
+    WHERE {
+      VALUES (?rel) {
+        (osmrel:{{relid}})
+      }
+      ?rel ?p ?o .
+    }
+    GROUP BY ?rel ?p ORDER BY DESC(?count)
+    LIMIT 500
+'Relation1':
+  # elements that have just one value
+  param_list:
+    - name: relid
+      type: str
+      default_value: "10492086"
+  sparql: |
+    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>
+    PREFIX osmrel: <https://www.openstreetmap.org/relation/>
+    PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>
+    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+
+    SELECT
+      ?rel
+      ?ref
+      ?from
+      ?name
+      ?network_wikidata
+      ?network
+    WHERE {
+      VALUES (?rel) {
+        (osmrel:{{relid}})
+      }
+      ?rel osmkey:ref ?ref .
+      ?rel osmkey:from ?from.
+      ?rel osmkey:name ?name.
+      ?rel osmkey:network:wikidata ?network_wikidata.
+      ?rel osmkey:network ?network.
+    }
