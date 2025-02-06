@@ -22,13 +22,16 @@ class QueryGen:
 
     def sanitize_variable_name(self, prop):
         """
-        Convert a property URI into a valid SPARQL variable name.
+        Convert a prefixed prop into a valid SPARQL variable name.
         """
-        parts = prop.split("/")
-        variable_name = ""
+        parts = prop.split(":")
+        var_name = ""
         if parts:
-            variable_name = parts[-1].replace("-", "_").replace(":", "_")
-        return variable_name
+            var_name=parts[-1]
+            for invalid in ["-",":","#"]:
+                var_name = var_name.replace(invalid, "_")
+        var_name=f"{var_name}"
+        return var_name
 
     def get_prefixed_property(self, prop):
         """
@@ -41,30 +44,34 @@ class QueryGen:
                 break
         return prefixed_prop
 
-    def gen(self, lod, relid,first_x:int=5):
+    def gen(self, lod, main_var:str,main_value:str,first_x:int=5):
         """
         Generate a SPARQL query dynamically based on the lod results.
         """
-        properties = [entry["p"] for entry in lod if entry["count"] == "1"]
+        sparql_query="# generated Query"
+        properties = {}
+        for record in lod:
+            if record["count"] == "1":
+                prop=record["p"]
+                prefixed_prop=self.get_prefixed_property(prop)
+                var_name=self.sanitize_variable_name(prefixed_prop)
+                properties[var_name]=prefixed_prop
+        for key, value in self.prefixes.items():
+            sparql_query+= f"\nPREFIX {key}: <{value}>"
 
-        prefix_lines = [f"PREFIX {key}: <{value}>" for key, value in self.prefixes.items()]
-        sparql_query = "\n".join(prefix_lines) + "\n\n"
+        sparql_query += f"\nSELECT ?{main_var}"
 
-        sparql_query += "SELECT ?rel"
-
-        for i, prop in enumerate(properties):
+        for i, var_name in enumerate(properties.keys()):
             comment="" if i < first_x else "#"
-            sparql_query +=f"\n{comment}  ?{self.sanitize_variable_name(prop)}"
+            sparql_query +=f"\n{comment}  ?{var_name}"
 
         sparql_query += "\nWHERE {\n"
 
-        sparql_query += f"  VALUES (?rel) {{ (osmrel:{relid}) }}\n"
+        sparql_query += f"  VALUES (?{main_var}) {{ ({main_value}) }}\n"
 
-        for i, prop in enumerate(properties):
-            key = self.sanitize_variable_name(prop)
-            prefixed_prop = self.get_prefixed_property(prop)
+        for i, (var_name,prefixed_prop) in enumerate(properties.items()):
             comment="" if i < first_x else "#"
-            sparql_query += f"{comment}  ?rel {prefixed_prop} ?{key} .\n"
+            sparql_query += f"{comment} OPTIONAL {{ ?rel {prefixed_prop} ?{var_name} }} .\n"
 
         sparql_query += "}"  # Closing WHERE clause
 
@@ -82,13 +89,15 @@ class TestRel2wiki(Basetest):
         self.prefixes = {
             "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "geo": "http://www.opengis.net/ont/geosparql#",
+            "geof": "http://www.opengis.net/def/function/geosparql/",
+            "ogc": "http://www.opengis.net/rdf#",
+            "osmkey": "https://www.openstreetmap.org/wiki/Key:",
             "osm2rdfmember": "https://osm2rdf.cs.uni-freiburg.de/rdf/member#",
             "osmrel": "https://www.openstreetmap.org/relation/",
-            "osmkey": "https://www.openstreetmap.org/wiki/Key:",
-            "geof": "http://www.opengis.net/def/function/geosparql/",
-            "meta": "https://www.openstreetmap.org/meta/",
             "osm2rdf": "https://osm2rdf.cs.uni-freiburg.de/rdf/",
-            "osm2rdf_geom": "https://osm2rdf.cs.uni-freiburg.de/rdf/geom#"
+            "osm2rdf_geom": "https://osm2rdf.cs.uni-freiburg.de/rdf/geom#",
+            "meta": "https://www.openstreetmap.org/meta/",
+            "xsd": "http://www.w3.org/2001/XMLSchema#"
         }
 
     def testExplore(self):
@@ -130,9 +139,9 @@ class TestRel2wiki(Basetest):
         """
         query_gen = QueryGen(self.prefixes)
         expected_results = {
-            "https://www.openstreetmap.org/wiki/Key:ref": "ref",
-            "https://www.openstreetmap.org/meta/uid": "uid",
-            "http://www.w3.org/1999/02/22-rdf-syntax-ns#type": "type",
+            "osmkey:ref": "ref",
+            "meta:uid": "uid",
+            "rdf:type": "type",
         }
 
         for prop, expected in expected_results.items():
@@ -142,6 +151,9 @@ class TestRel2wiki(Basetest):
 
 
     def testQueryGen(self):
+        """
+        test generating a query
+        """
         query_name = "RelationExplore"
         param_dict = {"relid": "10492086"}
         endpoint = "osm-qlever"
@@ -151,8 +163,12 @@ class TestRel2wiki(Basetest):
             print(f"Query: {query_name}:")
             print(json.dumps(lod, indent=2))
         query_gen = QueryGen(self.prefixes)
-
-        sparql_query =query_gen.gen(lod,param_dict["relid"])
+        relid=param_dict["relid"]
+        value=f"osmrel:{relid}"
+        sparql_query =query_gen.gen(lod,
+            main_var="rel",
+            main_value=value,
+            first_x=9)
 
         if self.debug:
             print("Generated SPARQL Query:")
