@@ -82,8 +82,8 @@ WHERE { ?s ?p ?o }"""
 
         endpoint_prefixes = """PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>"""
-
-        merged = self.handler.merge_prefixes(query, endpoint_prefixes)
+        endpoint_prefix_dict,_body=self.handler.parse_prefixes(endpoint_prefixes)
+        merged = self.handler.merge_prefixes(query, endpoint_prefix_dict)
         self.assertTrue('PREFIX rdfs:' in merged)
         self.assertTrue('PREFIX owl:' in merged)
         self.assertTrue('PREFIX xsd:' in merged)
@@ -94,7 +94,7 @@ PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 SELECT ?s ?p ?o
 WHERE { ?s ?p ?o }"""
 
-        merged2 = self.handler.merge_prefixes(query2, endpoint_prefixes)
+        merged2 = self.handler.merge_prefixes(query2, endpoint_prefix_dict)
         # Count occurrences of each prefix
         self.assertEqual(merged2.count('PREFIX owl:'), 1)
         self.assertEqual(merged2.count('PREFIX rdfs:'), 1)
@@ -105,7 +105,7 @@ WHERE { ?s ?p ?o }"""
 
         # Test case 4: Query without prefixes
         query4 = "SELECT ?s ?p ?o WHERE { ?s ?p ?o }"
-        merged4 = self.handler.merge_prefixes(query4, endpoint_prefixes)
+        merged4 = self.handler.merge_prefixes(query4, endpoint_prefix_dict)
         self.assertTrue('PREFIX owl:' in merged4)
         self.assertTrue('PREFIX xsd:' in merged4)
         self.assertTrue('SELECT ?s' in merged4)

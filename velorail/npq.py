@@ -3,93 +3,144 @@ Created on 2025-02-06
 
 @author: wf
 """
+import re
 from pathlib import Path
 from lodstorage.query import EndpointManager, Query, QueryManager
 from lodstorage.sparql import SPARQL
 import logging
 
+
 class NPQ_Handler():
     """
-    handling of named parameterized queries
+    Handling of named parameterized queries
     """
-    def __init__(self,yaml_file:str,with_default:bool=False):
+    def __init__(self, yaml_file: str, with_default: bool = False):
         """
-        constructor
+        Constructor
+
+        Args:
+            yaml_file (str): The YAML file containing the queries.
+            with_default (bool): Whether to include default endpoints.
         """
         self.endpoint_path = Path(__file__).parent / "resources" / "endpoints.yaml"
         self.query_path = Path(__file__).parent / "resources" / "queries"
-        self.query_yaml= self.query_path / yaml_file
+        self.query_yaml = self.query_path / yaml_file
+
         if not self.query_yaml.is_file():
-            raise FileNotFoundError(f"queries file not found: {self.query_yaml}")
+            raise FileNotFoundError(f"Queries file not found: {self.query_yaml}")
+
         self.query_manager = QueryManager(
             lang="sparql", queriesPath=self.query_yaml.as_posix()
         )
+
         self.endpoints = EndpointManager.getEndpoints(
             self.endpoint_path.as_posix(),
-            with_default=with_default)
+            with_default=with_default
+        )
 
-    def merge_prefixes(self, query_str: str, endpoint_prefixes: str) -> str:
+        # Preload prefixes for each endpoint
+        self.endpoint_prefixes = {}
+        for endpoint_name, endpoint in self.endpoints.items():
+            if hasattr(endpoint, 'prefixes'):
+                prefix_dict, _body= self.parse_prefixes(endpoint.prefixes)
+                self.endpoint_prefixes[endpoint_name] =prefix_dict
+            else:
+                self.endpoint_prefixes[endpoint_name] = dict()
+
+
+    def parse_prefixes(self, prefix_str: str) -> dict:
         """
-        Merge query prefixes with endpoint prefixes avoiding duplicates
+        Parse prefixes from string with newlines and prefixes per
+        line into a dictionary
 
         Args:
-            query_str(str): SPARQL query string potentially containing prefixes
-            endpoint_prefixes(str): Prefix definitions from endpoint
+            prefix_str (str): The string containing prefix definitions.
 
         Returns:
-            str: Query with merged unique prefixes
+            dict: A dictionary mapping prefix names to their URIs.
         """
-        query_prefixes = set()
-        endpoint_prefix_set = set()
+        prefix_pattern = re.compile(r"^prefix\s+(?P<name>\w+):\s+<(?P<uri>[^>]+)>", re.IGNORECASE)
+        prefix_dict={}
+        body=""
+        for line in prefix_str.splitlines():
+            if (match := prefix_pattern.match(line.strip())):
+                name=match.group("name")
+                uri=match.group("uri")
+                prefix_dict[name]=uri
+            body+=line+"\n"
+        return prefix_dict,body
 
-        # Extract prefixes from query
-        query_lines = query_str.split('\n')
-        query_body = []
-        for line in query_lines:
-            line_stripped = line.strip()
-            if line_stripped.lower().startswith('prefix'):
-                query_prefixes.add(line_stripped)
-            else:
-                query_body.append(line)
+    def to_set(self,prefix_dict)->set:
+        prefix_set = set()
+        for name in prefix_dict.keys():
+            prefix_set.add(name)
+        return prefix_set
 
-        # Extract prefixes from endpoint
-        if endpoint_prefixes:
-            for line in endpoint_prefixes.split('\n'):
-                line_stripped = line.strip()
-                if line_stripped.lower().startswith('prefix'):
-                    endpoint_prefix_set.add(line_stripped)
 
-        # Find unique endpoint prefixes
-        missing_prefixes = endpoint_prefix_set - query_prefixes
+    def merge_prefixes_by_endpoint_name(self, query_str: str, endpoint_name: str) -> str:
+        """
+        Merge query prefixes with endpoint prefixes avoiding duplicates.
 
-        all_prefixes = query_prefixes | missing_prefixes
+        Args:
+            query_str (str): SPARQL query string potentially containing prefixes.
+            endpoint_name (str): Name of the endpoint to use for prefix lookup.
 
-        # Only rebuild if we have new prefixes to add
-        if missing_prefixes:
-            prefix_section = "\n".join(sorted(all_prefixes))
-            body_section = "\n".join(query_body).strip()
-            merged_query = f"{prefix_section}\n\n{body_section}"
-        else:
-            merged_query = query_str
-
+        Returns:
+            str: Query with merged unique prefixes.
+        """
+        endpoint_prefix_dict = self.endpoint_prefixes.get(endpoint_name, {})
+        merged_query=self.merge_prefixes(query_str, endpoint_prefix_dict)
         return merged_query
 
-    def query(self,
-             query_name: str,
-             param_dict: dict = {},
-             endpoint: str = "wikidata-qlever",
-             auto_prefix: bool = True):
+    def merge_prefixes(self, query_str: str, endpoint_prefix_dict: dict) -> str:
         """
-        get the result of the given query
+        Merge query prefixes with endpoint prefixes avoiding duplicates.
 
         Args:
-            query_name(str): name of the query to execute
-            param_dict(dict): dictionary of parameters to substitute
-            endpoint(str): name of the endpoint to use
-            auto_prefix(bool): whether to automatically add endpoint prefixes
+            query_str (str): SPARQL query string potentially containing prefixes.
+            endpoint_prefix_dict (dict): Dictionary mapping prefix names to URIs.
 
         Returns:
-            list: list of dictionaries with query results
+            str: Query with merged unique prefixes.
+        """
+        prefix_dict, body_section = self.parse_prefixes(query_str)
+        query_prefix_set = self.to_set(prefix_dict)
+
+        endpoint_prefix_set = self.to_set(endpoint_prefix_dict)
+
+        missing_prefixes = endpoint_prefix_set - query_prefix_set
+
+        if not missing_prefixes:
+            return query_str
+
+        merged_prefix_dict = dict(endpoint_prefix_dict)
+        merged_prefix_dict.update(prefix_dict)
+
+        merged_prefix_lines = []
+        for prefix in sorted(merged_prefix_dict.keys()):
+            uri = merged_prefix_dict[prefix]
+            merged_prefix_lines.append(f"PREFIX {prefix}: <{uri}>")
+
+        merged_query = "\n".join(merged_prefix_lines) + f"\n\n{body_section}"
+        return merged_query
+
+
+    def query(self,
+              query_name: str,
+              param_dict: dict = {},
+              endpoint: str = "wikidata-qlever",
+              auto_prefix: bool = True):
+        """
+        Get the result of the given query.
+
+        Args:
+            query_name (str): Name of the query to execute.
+            param_dict (dict): Dictionary of parameters to substitute.
+            endpoint (str): Name of the endpoint to use.
+            auto_prefix (bool): Whether to automatically add endpoint prefixes.
+
+        Returns:
+            list: List of dictionaries with query results.
         """
         query: Query = self.query_manager.queriesByName.get(query_name)
         if not query:
@@ -100,9 +151,9 @@ class NPQ_Handler():
 
         # Get the query string and handle prefixes
         sparql_query = query.query
-        if auto_prefix and hasattr(sparql_endpoint, 'prefixes'):
-            logging.debug(f"auto prefixing:\n{sparql_endpoint.prefixes}")
-            sparql_query = self.merge_prefixes(sparql_query, sparql_endpoint.prefixes)
+        if auto_prefix:
+            logging.debug(f"Auto prefixing for endpoint: {endpoint}")
+            sparql_query = self.merge_prefixes(sparql_query, endpoint)
         logging.debug(f"SPARQL query:\n{sparql_query}")
 
         # Execute query

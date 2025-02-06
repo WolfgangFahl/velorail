@@ -278,12 +278,8 @@ class VeloRailWebServer(InputWebserver):
                 dict: JSON response with exploration results
             """
             explorer = Explorer(endpoint_name)
-            start_node = Node(
-                uri=f"{prefix}{node_id}" if prefix else node_id,
-                value=node_id,
-                type=NodeType.SUBJECT,
-                label=None
-            )
+
+            start_node = explorer.get_node(prefix,node_id)
             try:
                 lod = explorer.explore_node(start_node,summary=summary)
                 return {"status": "ok", "records": lod}

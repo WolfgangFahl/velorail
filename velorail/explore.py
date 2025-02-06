@@ -37,6 +37,33 @@ class Explorer(NPQ_Handler):
         super().__init__("sparql-explore.yaml")
         self.endpoint_name = endpoint_name
 
+    def get_node(self, node_id: str, prefix: str) -> Node:
+        """
+        Resolve a node URI using stored prefixes.
+
+        Args:
+            node_id (str): The node identifier.
+            prefix (str): The prefix to resolve.
+
+        Returns:
+            Node: Constructed node with resolved URI.
+        """
+        endpoint_prefix_dict = self.endpoint_prefixes.get(self.endpoint_name, {})
+
+        if prefix in endpoint_prefix_dict:
+            base_uri = endpoint_prefix_dict[prefix]
+            uri = f"{base_uri}{node_id}"
+        else:
+            raise ValueError(f"Prefix '{prefix}' not found in endpoint '{self.endpoint_name}'")
+
+        node = Node(
+            uri=uri,
+            value=node_id,
+            type=NodeType.SUBJECT,
+            label=f"{prefix}:{node_id}"
+        )
+        return node
+
     def explore_node(self, node: Node, summary:bool=False) -> str:
         """
         Get the appropriate exploration query based on node type
