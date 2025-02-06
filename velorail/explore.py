@@ -37,20 +37,21 @@ class Explorer(NPQ_Handler):
         super().__init__("sparql-explore.yaml")
         self.endpoint_name = endpoint_name
 
-    def explore_node(self, node: Node) -> str:
+    def explore_node(self, node: Node, summary:bool=False) -> str:
         """
         Get the appropriate exploration query based on node type
 
         Args:
             node: The node to explore from
+            summary: show a summary with counts
 
         Returns:
             Query result from the appropriate SPARQL query
         """
         query_map = {
-            NodeType.SUBJECT: "ExploreFromSubject",
-            NodeType.PREDICATE: "ExploreFromPredicate",
-            NodeType.OBJECT: "ExploreFromObject"
+           NodeType.SUBJECT: "ExploreFromSubject" if not summary else "ExploreFromSubjectSummary",
+           NodeType.PREDICATE: "ExploreFromPredicate" if not summary else "ExploreFromPredicateSummary",
+           NodeType.OBJECT: "ExploreFromObject" if not summary else "ExploreFromObjectSummary"
         }
 
         query_name = query_map[node.type]

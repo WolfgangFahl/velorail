@@ -29,7 +29,6 @@ class TestExplorer(Basetest):
                 "endpoints": [ "osm-qlever","osm-sophox"],
                 "examples": {
                     "cycle_route": {
-                        "uri": "https://www.openstreetmap.org/relation/10492086",
                         "prefix": "osmrel:",
                         "id": "10492086"
                     }
@@ -58,17 +57,19 @@ class TestExplorer(Basetest):
 
                     # Create start node
                     start_node = Node(
-                        uri=example.get("uri", f"{example['prefix']}{example['id']}"),
+                        uri=f"{example['prefix']}{example['id']}",
                         value=example["id"],
                         type=NodeType.SUBJECT,
                         label=example_name
                     )
 
                     # Get exploration results
-                    lod = explorer.explore_node(start_node)
-                    if self.debug:
-                        # print(json.dumps(lod,indent=2,default=str))
-                        print(f"{len(lod)}")
+                    for summary in (False,True):
+                        lod = explorer.explore_node(start_node,summary=summary)
+                        if self.debug:
+                            print(f"{len(lod)}")
+                            if summary:
+                                print(json.dumps(lod,indent=2,default=str))
 
     def test_merge_prefixes(self):
         """

@@ -10,13 +10,14 @@ import re
 from ngwidgets.input_webserver import InputWebserver, InputWebSolution
 from ngwidgets.webserver import WebserverConfig
 from ngwidgets.widgets import Link
-from nicegui import Client, ui
+from nicegui import Client, ui, app
 
 from velorail.gpxviewer import GPXViewer
 from velorail.version import Version
 from velorail.wditem_search import WikidataItemSearch
 from velorail.locfind import LocFinder
-
+from velorail.explore_view import ExplorerView
+from velorail.explore import Explorer, Node, NodeType
 class VeloRailSolution(InputWebSolution):
     """
     the VeloRail solution
@@ -131,6 +132,29 @@ class VeloRailSolution(InputWebSolution):
                 "Please provide a GPX file via 'gpx' query parameter or the command line."
             )
 
+    async def show_explorer(
+        self,
+        node_id: str = None,
+        prefix: str = "osm:relation",
+        endpoint_name: str = "osm-qlever",
+        summary: bool = False
+    ):
+        """
+        show the SPARQL explorer for the given node
+
+        Args:
+            node_id(str): id of the node to explore
+            prefix(str): prefix to use e.g. wd:
+            endpoint_name(str): name of the endpoint to use
+            summary(bool): if True show summary
+        """
+        def show():
+            explorer_view=ExplorerView(self,prefix=prefix,endpoint_name=endpoint_name,summary=summary)
+            explorer_view.setup_ui()
+            explorer_view.show(node_id)
+
+        await self.setup_content_div(show)
+
     def prepare_ui(self):
         """
         overrideable configuration
@@ -190,6 +214,15 @@ class VeloRailWebServer(InputWebserver):
         """Constructs all the necessary attributes for the WebServer object."""
         InputWebserver.__init__(self, config=VeloRailWebServer.get_config())
 
+        @ui.page("/explore/{node_id}")
+        async def explorer_page(client: Client, node_id: str, prefix: str="", endpoint_name: str="wikidata-qlever", summary: bool=False):
+            """
+            explore the given node id
+            """
+            await self.page(
+                client, VeloRailSolution.show_explorer, node_id=node_id, prefix=prefix, endpoint_name=endpoint_name, summary=summary
+            )
+
         @ui.page("/wd/{qid}")
         async def wikidata_item_page(client: Client, qid: str):
             """
@@ -224,6 +257,38 @@ class VeloRailWebServer(InputWebserver):
             GPX viewer page with optional gpx_url and auth_token.
             """
             await self.page(client, VeloRailSolution.show_gpx, gpx, auth_token, zoom)
+
+        @app.get("/api/explore/{node_id}")
+        async def explore_api(
+           node_id: str,
+           prefix: str = "osm:relation",
+           endpoint_name: str = "osm-qlever",
+           summary: bool = False
+        ):
+            """
+            SPARQL explorer REST API endpoint
+
+            Args:
+                node_id: id of the node to explore
+                prefix: prefix to use e.g. wd:
+                endpoint_name: name of the endpoint to use
+                summary: if True show summary
+
+            Returns:
+                dict: JSON response with exploration results
+            """
+            explorer = Explorer(endpoint_name)
+            start_node = Node(
+                uri=f"{prefix}{node_id}" if prefix else node_id,
+                value=node_id,
+                type=NodeType.SUBJECT,
+                label=None
+            )
+            try:
+                lod = explorer.explore_node(start_node,summary=summary)
+                return {"status": "ok", "records": lod}
+            except Exception as ex:
+                return {"status": "error", "message": str(ex)}
 
     def configure_run(self):
         root_path = (

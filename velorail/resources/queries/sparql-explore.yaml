@@ -1,36 +1,75 @@
 # Named parameterized Queries for SPARQL Graph Explorer
 ExploreFromSubject:
-  param_list:
-    - name: start_node
-      type: str
-      default_value: "Q80"
-  sparql: |
-    SELECT DISTINCT ?p ?o ?label
-    WHERE {
-      <{{start_node}}> ?p ?o .
-      OPTIONAL { ?o rdfs:label ?label }
-    }
+   param_list:
+       - name: start_node
+         type: str
+         default_value: "Q80"
+   sparql: |
+       SELECT DISTINCT ?p ?o ?label
+       WHERE {
+           {{start_node}} ?p ?o .
+           OPTIONAL { ?o rdfs:label ?label }
+       }
 
 ExploreFromPredicate:
-  param_list:
-    - name: start_node
-      type: str
-      default_value: "Q80"
-  sparql: |
-    SELECT DISTINCT ?s ?o ?label
-    WHERE {
-      ?s <{{start_node}}> ?o .
-      OPTIONAL { ?o rdfs:label ?label }
-    }
+   param_list:
+       - name: start_node
+         type: str
+         default_value: "Q80"
+   sparql: |
+       SELECT DISTINCT ?s ?o ?label
+       WHERE {
+           ?s {{start_node}} ?o .
+           OPTIONAL { ?o rdfs:label ?label }
+       }
 
 ExploreFromObject:
-  param_list:
-    - name: start_node
-      type: str
-      default_value: "Q80"
-  sparql: |
-    SELECT DISTINCT ?s ?p ?label
-    WHERE {
-      ?s ?p <{{start_node}}> .
-      OPTIONAL { ?s rdfs:label ?label }
-    }
+   param_list:
+       - name: start_node
+         type: str
+         default_value: "Q80"
+   sparql: |
+       SELECT DISTINCT ?s ?p ?label
+       WHERE {
+           ?s ?p {{start_node}} .
+           OPTIONAL { ?s rdfs:label ?label }
+       }
+
+ExploreFromSubjectSummary:
+   param_list:
+       - name: start_node
+         type: str
+         default_value: "Q80"
+   sparql: |
+       SELECT ?p (COUNT(?o) as ?count)
+       WHERE {
+           {{start_node}} ?p ?o .
+       }
+       GROUP BY ?p
+       ORDER BY DESC(?count)
+
+ExploreFromPredicateSummary:
+   param_list:
+       - name: start_node
+         type: str
+         default_value: "Q80"
+   sparql: |
+       SELECT ?s (COUNT(?o) as ?count)
+       WHERE {
+           ?s {{start_node}} ?o .
+       }
+       GROUP BY ?s
+       ORDER BY DESC(?count)
+
+ExploreFromObjectSummary:
+   param_list:
+       - name: start_node
+         type: str
+         default_value: "Q80"
+   sparql: |
+       SELECT ?p (COUNT(?s) as ?count)
+       WHERE {
+           ?s ?p {{start_node}} .
+       }
+       GROUP BY ?p
+       ORDER BY DESC(?count)
