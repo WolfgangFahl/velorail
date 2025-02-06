@@ -55,7 +55,7 @@ class QueryGen:
                 prop=record["p"]
                 prefixed_prop=self.get_prefixed_property(prop)
                 var_name=self.sanitize_variable_name(prefixed_prop)
-                properties[var_name]=prefixed_prop
+                properties[var_name]=(prop,prefixed_prop)
         for key, value in self.prefixes.items():
             sparql_query+= f"\nPREFIX {key}: <{value}>"
 
@@ -69,8 +69,9 @@ class QueryGen:
 
         sparql_query += f"  VALUES (?{main_var}) {{ ({main_value}) }}\n"
 
-        for i, (var_name,prefixed_prop) in enumerate(properties.items()):
+        for i, (var_name,(prop,prefixed_prop)) in enumerate(properties.items()):
             comment="" if i < first_x else "#"
+            sparql_query += f"# {prop}\n"
             sparql_query += f"{comment} OPTIONAL {{ ?rel {prefixed_prop} ?{var_name} }} .\n"
 
         sparql_query += "}"  # Closing WHERE clause

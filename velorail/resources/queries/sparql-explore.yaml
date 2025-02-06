@@ -1,0 +1,36 @@
+# Named parameterized Queries for SPARQL Graph Explorer
+ExploreFromSubject:
+  param_list:
+    - name: start_node
+      type: str
+      default_value: "Q80"
+  sparql: |
+    SELECT DISTINCT ?p ?o ?label
+    WHERE {
+      <{{start_node}}> ?p ?o .
+      OPTIONAL { ?o rdfs:label ?label }
+    }
+
+ExploreFromPredicate:
+  param_list:
+    - name: start_node
+      type: str
+      default_value: "Q80"
+  sparql: |
+    SELECT DISTINCT ?s ?o ?label
+    WHERE {
+      ?s <{{start_node}}> ?o .
+      OPTIONAL { ?o rdfs:label ?label }
+    }
+
+ExploreFromObject:
+  param_list:
+    - name: start_node
+      type: str
+      default_value: "Q80"
+  sparql: |
+    SELECT DISTINCT ?s ?p ?label
+    WHERE {
+      ?s ?p <{{start_node}}> .
+      OPTIONAL { ?s rdfs:label ?label }
+    }
