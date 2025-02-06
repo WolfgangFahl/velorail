@@ -3,17 +3,20 @@ Created on 2025-02-06
 
 @author: wf
 """
+
+import logging
 import re
 from pathlib import Path
+
 from lodstorage.query import EndpointManager, Query, QueryManager
 from lodstorage.sparql import SPARQL
-import logging
 
 
-class NPQ_Handler():
+class NPQ_Handler:
     """
     Handling of named parameterized queries
     """
+
     def __init__(self, yaml_file: str, with_default: bool = False):
         """
         Constructor
@@ -34,19 +37,17 @@ class NPQ_Handler():
         )
 
         self.endpoints = EndpointManager.getEndpoints(
-            self.endpoint_path.as_posix(),
-            with_default=with_default
+            self.endpoint_path.as_posix(), with_default=with_default
         )
 
         # Preload prefixes for each endpoint
         self.endpoint_prefixes = {}
         for endpoint_name, endpoint in self.endpoints.items():
-            if hasattr(endpoint, 'prefixes'):
-                prefix_dict, _body= self.parse_prefixes(endpoint.prefixes)
-                self.endpoint_prefixes[endpoint_name] =prefix_dict
+            if hasattr(endpoint, "prefixes"):
+                prefix_dict, _body = self.parse_prefixes(endpoint.prefixes)
+                self.endpoint_prefixes[endpoint_name] = prefix_dict
             else:
                 self.endpoint_prefixes[endpoint_name] = dict()
-
 
     def parse_prefixes(self, prefix_str: str) -> dict:
         """
@@ -59,25 +60,29 @@ class NPQ_Handler():
         Returns:
             dict: A dictionary mapping prefix names to their URIs.
         """
-        prefix_pattern = re.compile(r"^prefix\s+(?P<name>\w+):\s+<(?P<uri>[^>]+)>", re.IGNORECASE)
-        prefix_dict={}
-        body=""
+        prefix_pattern = re.compile(
+            r"^prefix\s+(?P<name>\w+):\s+<(?P<uri>[^>]+)>", re.IGNORECASE
+        )
+        prefix_dict = {}
+        body = ""
         for line in prefix_str.splitlines():
-            if (match := prefix_pattern.match(line.strip())):
-                name=match.group("name")
-                uri=match.group("uri")
-                prefix_dict[name]=uri
-            body+=line+"\n"
-        return prefix_dict,body
+            if match := prefix_pattern.match(line.strip()):
+                name = match.group("name")
+                uri = match.group("uri")
+                prefix_dict[name] = uri
+            else:
+                body += line + "\n"
+        return prefix_dict, body
 
-    def to_set(self,prefix_dict)->set:
+    def to_set(self, prefix_dict) -> set:
         prefix_set = set()
         for name in prefix_dict.keys():
             prefix_set.add(name)
         return prefix_set
 
-
-    def merge_prefixes_by_endpoint_name(self, query_str: str, endpoint_name: str) -> str:
+    def merge_prefixes_by_endpoint_name(
+        self, query_str: str, endpoint_name: str
+    ) -> str:
         """
         Merge query prefixes with endpoint prefixes avoiding duplicates.
 
@@ -89,7 +94,7 @@ class NPQ_Handler():
             str: Query with merged unique prefixes.
         """
         endpoint_prefix_dict = self.endpoint_prefixes.get(endpoint_name, {})
-        merged_query=self.merge_prefixes(query_str, endpoint_prefix_dict)
+        merged_query = self.merge_prefixes(query_str, endpoint_prefix_dict)
         return merged_query
 
     def merge_prefixes(self, query_str: str, endpoint_prefix_dict: dict) -> str:
@@ -124,12 +129,13 @@ class NPQ_Handler():
         merged_query = "\n".join(merged_prefix_lines) + f"\n\n{body_section}"
         return merged_query
 
-
-    def query(self,
-              query_name: str,
-              param_dict: dict = {},
-              endpoint: str = "wikidata-qlever",
-              auto_prefix: bool = True):
+    def query(
+        self,
+        query_name: str,
+        param_dict: dict = {},
+        endpoint: str = "wikidata-qlever",
+        auto_prefix: bool = True,
+    ):
         """
         Get the result of the given query.
 
@@ -153,7 +159,7 @@ class NPQ_Handler():
         sparql_query = query.query
         if auto_prefix:
             logging.debug(f"Auto prefixing for endpoint: {endpoint}")
-            sparql_query = self.merge_prefixes(sparql_query, endpoint)
+            sparql_query = self.merge_prefixes_by_endpoint_name(sparql_query, endpoint)
         logging.debug(f"SPARQL query:\n{sparql_query}")
 
         # Execute query

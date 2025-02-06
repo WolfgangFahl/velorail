@@ -1,22 +1,24 @@
 #!/usr/bin/env python
-from argparse import ArgumentParser, Namespace
-import os
 import json
+import os
+from argparse import ArgumentParser, Namespace
 from typing import Dict, List
 
-from lodstorage.query import EndpointManager, QueryManager
-from lodstorage.sparql import SPARQL
-from lodstorage.query_cmd import QueryCmd
 from lodstorage.params import Params
-from velorail.tour import LegStyles
+from lodstorage.query import EndpointManager, QueryManager
+from lodstorage.query_cmd import QueryCmd
+from lodstorage.sparql import SPARQL
+
 from velorail.locfind import LocFinder
+from velorail.tour import LegStyles
+
 
 class OsmRelConverter:
     """
     Converter for OSM relations to MediaWiki pages
     """
 
-    def __init__(self, args:Namespace):
+    def __init__(self, args: Namespace):
         """
         Initialize the converter
 
@@ -25,46 +27,83 @@ class OsmRelConverter:
         """
         self.args = args
         self.tmpdir = args.tmp
-        self.loc_finder=LocFinder()
+        self.loc_finder = LocFinder()
         self.endpoints = self.loc_finder.endpoints
         self.endpoint = self.endpoints.get(args.endpoint_name)
         self.sparql = SPARQL.fromEndpointConf(self.endpoint)
-        self.leg_style=LegStyles.default()
-        self.test=False
+        self.leg_style = LegStyles.default()
+        self.test = False
 
     @classmethod
     def get_parser(cls):
         """Get the argument parser"""
-        parser = ArgumentParser(description="Convert OpenStreetMap railway relations to MediaWiki pages")
+        parser = ArgumentParser(
+            description="Convert OpenStreetMap railway relations to MediaWiki pages"
+        )
         # Add standard query command args
         QueryCmd.add_args(parser)
         # Add our specific args
-        parser.add_argument('--tmp', default='/tmp', help='Temporary directory (default: %(default)s)')
-        parser.add_argument('-en', '--endpoint_name', default='osm-qlever',
-            help='Endpoint name (default: %(default)s)')
-        parser.add_argument('--zoom', type=int, default=8,
-            help='Zoom factor (default: %(default)s)')
-        parser.add_argument('--min_lat', type=float, default=42.0,
-            help='Minimum latitude (default: %(default)s)')
-        parser.add_argument('--max_lat', type=float, default=44.0,
-            help='Maximum latitude (default: %(default)s)')
-        parser.add_argument('--min_lon', type=float, default=-9.0,
-            help='Minimum longitude (default: %(default)s)')
-        parser.add_argument('--max_lon', type=float, default=4.0,
-            help='Maximum longitude (default: %(default)s)')
-        parser.add_argument('--role', default='stop',
-            help='Member role to filter (default: %(default)s)')
-        parser.add_argument('--country', default='Spanien',
-            help='Country name for Loc template (default: %(default)s)')
-        parser.add_argument('--category', default='Spain2025',
-            help='Wiki category (default: %(default)s)')
-        parser.add_argument('relations', nargs='*', default=['10492086', '4220975'],
-            help='Relation IDs to process [default: %(default)s]')
+        parser.add_argument(
+            "--tmp", default="/tmp", help="Temporary directory (default: %(default)s)"
+        )
+        parser.add_argument(
+            "-en",
+            "--endpoint_name",
+            default="osm-qlever",
+            help="Endpoint name (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--zoom", type=int, default=8, help="Zoom factor (default: %(default)s)"
+        )
+        parser.add_argument(
+            "--min_lat",
+            type=float,
+            default=42.0,
+            help="Minimum latitude (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--max_lat",
+            type=float,
+            default=44.0,
+            help="Maximum latitude (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--min_lon",
+            type=float,
+            default=-9.0,
+            help="Minimum longitude (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--max_lon",
+            type=float,
+            default=4.0,
+            help="Maximum longitude (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--role",
+            default="stop",
+            help="Member role to filter (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--country",
+            default="Spanien",
+            help="Country name for Loc template (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--category",
+            default="Spain2025",
+            help="Wiki category (default: %(default)s)",
+        )
+        parser.add_argument(
+            "relations",
+            nargs="*",
+            default=["10492086", "4220975"],
+            help="Relation IDs to process [default: %(default)s]",
+        )
         args = parser.parse_args()
         if not args.queryName:
-            args.queryName="RelationNodesGeo"
+            args.queryName = "RelationNodesGeo"
         return args
-
 
     def query_rel(self, rel: str) -> Dict:
         """
@@ -77,28 +116,29 @@ class OsmRelConverter:
              Dict: The query results as list of dicts
         """
         if not self.args.queriesPath:
-            self.args.queriesPath= self.loc_finder.query_path / "osmplanet.yaml"
-        qm = QueryManager(lang='sparql', debug=self.args.debug,
-            queriesPath=self.args.queriesPath)
+            self.args.queriesPath = self.loc_finder.query_path / "osmplanet.yaml"
+        qm = QueryManager(
+            lang="sparql", debug=self.args.debug, queriesPath=self.args.queriesPath
+        )
         self.query = qm.queriesByName[self.args.queryName]
 
         param_dict = {
-             'relid': rel,
-             'role': self.args.role,
-             'min_lat': str(self.args.min_lat),
-             'max_lat': str(self.args.max_lat),
-             'min_lon': str(self.args.min_lon),
-             'max_lon': str(self.args.max_lon)
+            "relid": rel,
+            "role": self.args.role,
+            "min_lat": str(self.args.min_lat),
+            "max_lat": str(self.args.max_lat),
+            "min_lon": str(self.args.min_lon),
+            "max_lon": str(self.args.max_lon),
         }
 
         if self.args.debug:
             print(f"Querying relation {rel}")
 
         query_result = self.sparql.queryAsListOfDicts(
-             self.query.query, param_dict=param_dict
+            self.query.query, param_dict=param_dict
         )
         if self.args.debug:
-            queryString=self.query.query
+            queryString = self.query.query
             params = Params(queryString)
             queryString = params.apply_parameters_with_check(param_dict)
             print(queryString)
@@ -158,7 +198,7 @@ https://www.openstreetmap.org/relation/{rel}
         wiki += f"\n<headertabs/>\n[[Category:{self.args.category}]]"
         return wiki
 
-    def process_relations(self, relations: List[str],with_write:bool=True):
+    def process_relations(self, relations: List[str], with_write: bool = True):
         """
         Process the given relations
 
@@ -175,13 +215,13 @@ https://www.openstreetmap.org/relation/{rel}
             # Query and save JSON
             data = self.query_rel(rel)
             if with_write:
-                with open(json_file, 'w') as f:
+                with open(json_file, "w") as f:
                     json.dump(data, f, indent=2)
 
             # Convert to wiki and save
             wiki = self.to_mediawiki(rel, data)
             if with_write:
-                with open(wiki_file, 'w') as f:
+                with open(wiki_file, "w") as f:
                     f.write(wiki)
 
             if not self.test:

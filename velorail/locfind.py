@@ -3,32 +3,38 @@ Created on 2025-02-01
 
 @author: th
 """
+
+from typing import Optional
+
 import numpy as np
 import pandas as pd
-
 from lodstorage.yamlable import lod_storable
-from typing import Optional
 from ngwidgets.widgets import Link
-from velorail.tour import LegStyles
+
 from velorail.npq import NPQ_Handler
+from velorail.tour import LegStyles
+
 
 @lod_storable
 class WikidataGeoItem:
     """
     Dataclass for storing Wikidata geographical location data with labels
     """
+
     qid: str
     lat: float
     lon: float
-    label: Optional[str]=None
-    description: Optional[str]=None
+    label: Optional[str] = None
+    description: Optional[str] = None
 
-    def as_wd_link(self)->Link:
+    def as_wd_link(self) -> Link:
         text = f"""{self.label}({self.qid})☞{self.description}"""
         wd_link = Link.create(f"https://www.wikidata.org/wiki/{self.qid}", text)
         return wd_link
 
-    def get_map_links(self, leg_styles:Optional[LegStyles]=None, zoom:int=14) -> str:
+    def get_map_links(
+        self, leg_styles: Optional[LegStyles] = None, zoom: int = 14
+    ) -> str:
         """
         Get HTML markup with icons grouped by map type
         """
@@ -40,16 +46,16 @@ class WikidataGeoItem:
             "opencyclemap.org": ["bike"],
             "openrailwaymap.org": ["train"],
             "map.openseamap.org": ["ferry"],
-            "hiking.waymarkedtrails.org": ["foot"]
+            "hiking.waymarkedtrails.org": ["foot"],
         }
 
         markup = ""
-        delim=""
+        delim = ""
         for map_url, leg_types in map_links.items():
-            icons=""
+            icons = ""
             for leg_type in leg_types:
-                leg_style=leg_styles.get_style(leg_type)
-                icons+=leg_style.utf8_icon
+                leg_style = leg_styles.get_style(leg_type)
+                icons += leg_style.utf8_icon
             tooltip = f"{','.join(leg_types)} map"
             if "car" in leg_types:
                 url = f"https://{map_url}/#map={zoom}/{self.lat}/{self.lon}"
@@ -57,13 +63,13 @@ class WikidataGeoItem:
                 url = f"https://{map_url}/#?map={zoom}/{self.lat}/{self.lon}"
             else:
                 url = f"https://{map_url}/?zoom={zoom}&lat={self.lat}&lon={self.lon}"
-            link=Link.create(url, text=icons, tooltip=tooltip, target="_blank")
-            markup+=link+delim
-            delim="\n"
+            link = Link.create(url, text=icons, tooltip=tooltip, target="_blank")
+            markup += link + delim
+            delim = "\n"
         return markup
 
     @property
-    def osm_url(self, map_type:str= "street", zoom: int = 15) -> str:
+    def osm_url(self, map_type: str = "street", zoom: int = 15) -> str:
         """
         Get OpenStreetMap URL for this location
 
@@ -73,11 +79,11 @@ class WikidataGeoItem:
         Returns:
             OpenStreetMap URL for the location
         """
-        osm_url=f"https://www.open{map_type}map.org/?mlat={self.lat}&mlon={self.lon}&zoom={zoom}"
+        osm_url = f"https://www.open{map_type}map.org/?mlat={self.lat}&mlon={self.lon}&zoom={zoom}"
         return osm_url
 
     @classmethod
-    def from_record(cls, record: dict) -> 'WikidataGeoItem':
+    def from_record(cls, record: dict) -> "WikidataGeoItem":
         """
         Create WikidataGeoItem from a dictionary record
 
@@ -92,19 +98,21 @@ class WikidataGeoItem:
             lat=float(record["lat"]),
             lon=float(record["lon"]),
             label=record["label"],
-            description=record["description"]
+            description=record["description"],
         )
-
 
 
 class LocFinder(NPQ_Handler):
     """
     Set of methods to lookup different location types
     """
+
     def __init__(self):
         super().__init__("locations.yaml")
 
-    def get_bike_nodes_by_bounds(self, south: float, west: float, north: float, east: float):
+    def get_bike_nodes_by_bounds(
+        self, south: float, west: float, north: float, east: float
+    ):
         """
         Get all bike nodes within the given bounding box
 
@@ -117,16 +125,11 @@ class LocFinder(NPQ_Handler):
         Returns:
             list of dicts containing bike route information
         """
-        param_dict = {
-            "south": south,
-            "west": west,
-            "north": north,
-            "east": east
-        }
+        param_dict = {"south": south, "west": west, "north": north, "east": east}
         lod = self.query(
             query_name="BikeNodes4Bounds",
             param_dict=param_dict,
-            endpoint="osm-sophox"  # Using Sophox endpoint for OSM data
+            endpoint="osm-sophox",  # Using Sophox endpoint for OSM data
         )
         return lod
 
@@ -150,7 +153,6 @@ class LocFinder(NPQ_Handler):
     def get_all_train_stations(self):
         lod = self.query(query_name="AllTrainStations")
         return lod
-
 
     def get_train_stations_by_coordinates(
         self, latitude: float, longitude: float, radius: float

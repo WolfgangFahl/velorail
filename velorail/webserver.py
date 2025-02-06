@@ -10,14 +10,16 @@ import re
 from ngwidgets.input_webserver import InputWebserver, InputWebSolution
 from ngwidgets.webserver import WebserverConfig
 from ngwidgets.widgets import Link
-from nicegui import Client, ui, app
+from nicegui import Client, app, ui
 
+from velorail.explore import Explorer, Node, NodeType
+from velorail.explore_view import ExplorerView
 from velorail.gpxviewer import GPXViewer
+from velorail.locfind import LocFinder
 from velorail.version import Version
 from velorail.wditem_search import WikidataItemSearch
-from velorail.locfind import LocFinder
-from velorail.explore_view import ExplorerView
-from velorail.explore import Explorer, Node, NodeType
+
+
 class VeloRailSolution(InputWebSolution):
     """
     the VeloRail solution
@@ -49,26 +51,24 @@ class VeloRailSolution(InputWebSolution):
         # Regex to match and remove SMW markers
         return re.sub(r"\[\[SMW::(on|off)\]\]", "", input_str)
 
-    async def show_wikidata_item(
-        self,
-        qid: str = None
-    ):
+    async def show_wikidata_item(self, qid: str = None):
         """
         show the given wikidata item on the map
         Args:
             qid(str): the Wikidata id of the item to analyze
         """
+
         def show():
-            viewer=self.viewer
+            viewer = self.viewer
             # Create LocFinder and get coordinates
             locfinder = LocFinder()
-            center=None
+            center = None
             wd_item = locfinder.get_wikidata_geo(qid)
             if wd_item:
-                wd_link=wd_item.as_wd_link()
-                wd_maps=wd_item.get_map_links(zoom=self.viewer.zoom)
+                wd_link = wd_item.as_wd_link()
+                wd_maps = wd_item.get_map_links(zoom=self.viewer.zoom)
                 # create markup with links
-                markup=f"{wd_link}&nbsp;{wd_maps}"
+                markup = f"{wd_link}&nbsp;{wd_maps}"
                 ui.html(markup)
                 center = [wd_item.lat, wd_item.lon]
             viewer.show(center=center)
@@ -137,7 +137,7 @@ class VeloRailSolution(InputWebSolution):
         node_id: str = None,
         prefix: str = "osm:relation",
         endpoint_name: str = "osm-qlever",
-        summary: bool = False
+        summary: bool = False,
     ):
         """
         show the SPARQL explorer for the given node
@@ -148,8 +148,11 @@ class VeloRailSolution(InputWebSolution):
             endpoint_name(str): name of the endpoint to use
             summary(bool): if True show summary
         """
+
         def show():
-            explorer_view=ExplorerView(self,prefix=prefix,endpoint_name=endpoint_name,summary=summary)
+            explorer_view = ExplorerView(
+                self, prefix=prefix, endpoint_name=endpoint_name, summary=summary
+            )
             explorer_view.setup_ui()
             explorer_view.show(node_id)
 
@@ -172,8 +175,8 @@ class VeloRailSolution(InputWebSolution):
             filter the given search record
             """
             if "label" and "desc" in record:
-                desc=record["desc"]
-                label=record["label"]
+                desc = record["desc"]
+                label = record["label"]
                 text = f"""{label}({qid})☞{desc}"""
                 map_link = Link.create(f"/wd/{qid}", text)
                 # getting the link to be at second position
@@ -215,12 +218,23 @@ class VeloRailWebServer(InputWebserver):
         InputWebserver.__init__(self, config=VeloRailWebServer.get_config())
 
         @ui.page("/explore/{node_id}")
-        async def explorer_page(client: Client, node_id: str, prefix: str="", endpoint_name: str="wikidata-qlever", summary: bool=False):
+        async def explorer_page(
+            client: Client,
+            node_id: str,
+            prefix: str = "",
+            endpoint_name: str = "wikidata-qlever",
+            summary: bool = False,
+        ):
             """
             explore the given node id
             """
             await self.page(
-                client, VeloRailSolution.show_explorer, node_id=node_id, prefix=prefix, endpoint_name=endpoint_name, summary=summary
+                client,
+                VeloRailSolution.show_explorer,
+                node_id=node_id,
+                prefix=prefix,
+                endpoint_name=endpoint_name,
+                summary=summary,
             )
 
         @ui.page("/wd/{qid}")
@@ -228,9 +242,7 @@ class VeloRailWebServer(InputWebserver):
             """
             show the given wikidata item on the map
             """
-            await self.page(
-                client,VeloRailSolution.show_wikidata_item, qid
-            )
+            await self.page(client, VeloRailSolution.show_wikidata_item, qid)
 
         @ui.page("/lines")
         async def lines_page(
@@ -260,10 +272,10 @@ class VeloRailWebServer(InputWebserver):
 
         @app.get("/api/explore/{node_id}")
         async def explore_api(
-           node_id: str,
-           prefix: str = "osm:relation",
-           endpoint_name: str = "osm-qlever",
-           summary: bool = False
+            node_id: str,
+            prefix: str = "osm:relation",
+            endpoint_name: str = "osm-qlever",
+            summary: bool = False,
         ):
             """
             SPARQL explorer REST API endpoint
@@ -279,9 +291,9 @@ class VeloRailWebServer(InputWebserver):
             """
             explorer = Explorer(endpoint_name)
 
-            start_node = explorer.get_node(prefix,node_id)
+            start_node = explorer.get_node(prefix, node_id)
             try:
-                lod = explorer.explore_node(start_node,summary=summary)
+                lod = explorer.explore_node(start_node, summary=summary)
                 return {"status": "ok", "records": lod}
             except Exception as ex:
                 return {"status": "error", "message": str(ex)}

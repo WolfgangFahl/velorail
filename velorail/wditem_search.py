@@ -10,8 +10,9 @@ from typing import Callable
 from ez_wikidata.wdsearch import WikidataSearch
 from ngwidgets.lod_grid import ListOfDictsGrid
 from ngwidgets.webserver import WebSolution
-from ngwidgets.widgets import Lang,Link
+from ngwidgets.widgets import Lang, Link
 from nicegui import ui
+
 
 class WikidataItemSearch:
     """

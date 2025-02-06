@@ -3,11 +3,16 @@ Created on 2025-06-02
 
 @author: wf
 """
+
 import json
 import logging
+
 from ngwidgets.basetest import Basetest
-from velorail.npq import NPQ_Handler
+
 from velorail.explore import Explorer, Node, NodeType
+from velorail.npq import NPQ_Handler
+
+
 class TestExplorer(Basetest):
     """
     test explorer
@@ -26,23 +31,13 @@ class TestExplorer(Basetest):
         # Define test cases for different endpoints
         endpoint_tests = {
             "osm": {
-                "endpoints": [ "osm-qlever","osm-sophox"],
-                "examples": {
-                    "cycle_route": {
-                        "prefix": "osmrel:",
-                        "id": "10492086"
-                    }
-                }
+                "endpoints": ["osm-qlever", "osm-sophox"],
+                "examples": {"cycle_route": {"prefix": "osmrel:", "id": "10492086"}},
             },
             "wikidata": {
                 "endpoints": ["wikidata", "wikidata-qlever"],
-                "examples": {
-                    "Tim Berners-Lee": {
-                        "prefix": "wd:",
-                        "id": "Q80"
-                    }
-                }
-            }
+                "examples": {"Tim Berners-Lee": {"prefix": "wd:", "id": "Q80"}},
+            },
         }
 
         for platform, config in endpoint_tests.items():
@@ -60,16 +55,16 @@ class TestExplorer(Basetest):
                         uri=f"{example['prefix']}{example['id']}",
                         value=example["id"],
                         type=NodeType.SUBJECT,
-                        label=example_name
+                        label=example_name,
                     )
 
                     # Get exploration results
-                    for summary in (False,True):
-                        lod = explorer.explore_node(start_node,summary=summary)
+                    for summary in (False, True):
+                        lod = explorer.explore_node(start_node, summary=summary)
                         if self.debug:
                             print(f"{len(lod)}")
                             if summary:
-                                print(json.dumps(lod,indent=2,default=str))
+                                print(json.dumps(lod, indent=2, default=str))
 
     def test_merge_prefixes(self):
         """
@@ -82,11 +77,11 @@ WHERE { ?s ?p ?o }"""
 
         endpoint_prefixes = """PREFIX owl: <http://www.w3.org/2002/07/owl#>
 PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>"""
-        endpoint_prefix_dict,_body=self.handler.parse_prefixes(endpoint_prefixes)
+        endpoint_prefix_dict, _body = self.handler.parse_prefixes(endpoint_prefixes)
         merged = self.handler.merge_prefixes(query, endpoint_prefix_dict)
-        self.assertTrue('PREFIX rdfs:' in merged)
-        self.assertTrue('PREFIX owl:' in merged)
-        self.assertTrue('PREFIX xsd:' in merged)
+        self.assertTrue("PREFIX rdfs:" in merged)
+        self.assertTrue("PREFIX owl:" in merged)
+        self.assertTrue("PREFIX xsd:" in merged)
 
         # Test case 2: With duplicates
         query2 = """PREFIX owl: <http://www.w3.org/2002/07/owl#>
@@ -96,16 +91,16 @@ WHERE { ?s ?p ?o }"""
 
         merged2 = self.handler.merge_prefixes(query2, endpoint_prefix_dict)
         # Count occurrences of each prefix
-        self.assertEqual(merged2.count('PREFIX owl:'), 1)
-        self.assertEqual(merged2.count('PREFIX rdfs:'), 1)
+        self.assertEqual(merged2.count("PREFIX owl:"), 1)
+        self.assertEqual(merged2.count("PREFIX rdfs:"), 1)
 
         # Test case 3: Empty endpoint prefixes
-        merged3 = self.handler.merge_prefixes(query, "")
+        merged3 = self.handler.merge_prefixes(query, {})
         self.assertEqual(merged3, query)
 
         # Test case 4: Query without prefixes
         query4 = "SELECT ?s ?p ?o WHERE { ?s ?p ?o }"
         merged4 = self.handler.merge_prefixes(query4, endpoint_prefix_dict)
-        self.assertTrue('PREFIX owl:' in merged4)
-        self.assertTrue('PREFIX xsd:' in merged4)
-        self.assertTrue('SELECT ?s' in merged4)
+        self.assertTrue("PREFIX owl:" in merged4)
+        self.assertTrue("PREFIX xsd:" in merged4)
+        self.assertTrue("SELECT ?s" in merged4)

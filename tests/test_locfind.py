@@ -3,9 +3,13 @@ Created on 2025-02-01
 
 @author: th
 """
+
 import json
-from velorail.locfind import LocFinder
+
 from ngwidgets.basetest import Basetest
+
+from velorail.locfind import LocFinder
+
 
 class TestLocFinder(Basetest):
     """
@@ -26,7 +30,7 @@ class TestLocFinder(Basetest):
             "lat": 43.4592,
             "lon": -1.5459,
             "label": "Gare de Biarritz",
-            "description": "railway station in Biarritz, France"
+            "description": "railway station in Biarritz, France",
         }
 
         lod = locfinder.query(query_name="WikidataGeo", param_dict={"qid": qid})
@@ -66,7 +70,6 @@ class TestLocFinder(Basetest):
         print(len(lod_train_stations))
         self.assertGreaterEqual(len(lod_train_stations), 70000)
 
-
     def test_get_nearest_train_station(self):
         """
         test get_nearest_train_station
@@ -85,13 +88,11 @@ class TestLocFinder(Basetest):
         """
         # Bounding box for Heeg/Stavoren area
         south = 52.8349  # Southern boundary
-        west = 5.3184   # Western boundary
+        west = 5.3184  # Western boundary
         north = 53.0125  # Northern boundary
-        east = 5.8279   # Eastern boundary
+        east = 5.8279  # Eastern boundary
 
         locfinder = LocFinder()
         bike_routes = locfinder.get_bike_nodes_by_bounds(south, west, north, east)
         if self.debug:
-            print(json.dumps(bike_routes,indent=2))
-
-
+            print(json.dumps(bike_routes, indent=2))
