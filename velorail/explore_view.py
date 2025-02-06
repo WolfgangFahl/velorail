@@ -4,7 +4,7 @@ Created on 2025-06-02
 @author: wf
 """
 
-from ngwidgets.lod_grid import ListOfDictsGrid
+from ngwidgets.lod_grid import ListOfDictsGrid, GridConfig
 from ngwidgets.webserver import WebSolution
 from nicegui import background_tasks, ui
 
@@ -47,6 +47,7 @@ class ExplorerView:
         self.result_row = ui.row()
         self.spinner = ui.spinner("dots")
         self.spinner.visible = False
+        self.lod_grid=None
 
     def show(self, node_id: str):
         """
@@ -58,23 +59,35 @@ class ExplorerView:
         self.node_id = node_id
         background_tasks.create(self.update_results())
 
+    def update_lod(self,lod):
+        view_lod = []
+        for i, record in enumerate(lod):
+            view_record = record.copy()
+            view_record["#"] = i
+            view_lod.append(view_record)
+        with self.result_row:
+            if self.lod_grid is None:
+                self.lod_grid=ListOfDictsGrid(lod)
+                self.lod_grid.setup_button_row(["fit","all"])
+                self.lod_grid.set_checkbox_selection("#")
+            else:
+                self.lod_grid.load_lod(view_lod)
+                self.lod_grid.update()
+
     async def update_results(self):
         """
         get and display the exploration results
         """
-        start_node = self.explorer.get_node(self.node_id, self.prefix)
-        self.spinner.visible = True
-        with self.result_row:
-            ui.label(f"Exploring {start_node.qualified_name} on {self.endpoint_name}")
-            try:
-                lod = await background_tasks.create(
-                    self.explorer.explore_node(start_node)
-                )
+        try:
+            start_node = self.explorer.get_node(self.node_id, self.prefix)
+            self.spinner.visible = True
+            with self.result_row:
+                ui.label(f"Exploring {start_node.qualified_name} on {self.endpoint_name}")
+                lod = self.explorer.explore_node(start_node,triple_pos=TriplePos.SUBJECT,summary=self.summary)
                 self.result_row.clear()
                 if lod:
-                    grid = ListOfDictsGrid(lod)
-                    grid.show()
-            except Exception as ex:
-                ui.label(f"Query failed: {str(ex)}")
-            finally:
-                self.spinner.visible = False
+                    self.update_lod(lod)
+        except Exception as ex:
+            self.solution.handle_exception(ex)
+        finally:
+            self.spinner.visible = False

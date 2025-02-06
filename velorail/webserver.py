@@ -151,7 +151,10 @@ class VeloRailSolution(InputWebSolution):
 
         def show():
             explorer_view = ExplorerView(
-                self, prefix=prefix, endpoint_name=endpoint_name, summary=summary
+                self,
+                prefix=prefix,
+                endpoint_name=endpoint_name,
+                summary=summary
             )
             explorer_view.setup_ui()
             explorer_view.show(node_id)
