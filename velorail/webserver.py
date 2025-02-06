@@ -12,7 +12,7 @@ from ngwidgets.webserver import WebserverConfig
 from ngwidgets.widgets import Link
 from nicegui import Client, app, ui
 
-from velorail.explore import Explorer, Node, NodeType
+from velorail.explore import Explorer, TriplePos
 from velorail.explore_view import ExplorerView
 from velorail.gpxviewer import GPXViewer
 from velorail.locfind import LocFinder
@@ -273,7 +273,7 @@ class VeloRailWebServer(InputWebserver):
         @app.get("/api/explore/{node_id}")
         async def explore_api(
             node_id: str,
-            prefix: str = "osm:relation",
+            prefix: str = "osmrel",
             endpoint_name: str = "osm-qlever",
             summary: bool = False,
         ):
@@ -291,9 +291,9 @@ class VeloRailWebServer(InputWebserver):
             """
             explorer = Explorer(endpoint_name)
 
-            start_node = explorer.get_node(prefix, node_id)
+            start_node = explorer.get_node(prefix=prefix, node_id=node_id)
             try:
-                lod = explorer.explore_node(start_node, summary=summary)
+                lod = explorer.explore_node(start_node, triple_pos=TriplePos.SUBJECT,summary=summary)
                 return {"status": "ok", "records": lod}
             except Exception as ex:
                 return {"status": "error", "message": str(ex)}

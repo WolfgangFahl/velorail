@@ -11,7 +11,7 @@ from typing import Optional
 from velorail.npq import NPQ_Handler
 
 
-class NodeType(Enum):
+class TriplePos(Enum):
     SUBJECT = "subject"
     PREDICATE = "predicate"
     OBJECT = "object"
@@ -22,11 +22,17 @@ class Node:
     """
     Represents a node in the RDF graph
     """
-
-    uri: str
-    value: str
-    type: NodeType
+    prefix: str
+    node_id: str
+    uri: Optional[str]= None
     label: Optional[str] = None
+
+    @property
+    def qualified_name(self) -> str:
+        """
+        Returns the qualified name in the format {prefix}:{node_id}
+        """
+        return f"{self.prefix}:{self.node_id}"
 
 
 class Explorer(NPQ_Handler):
@@ -66,35 +72,39 @@ class Explorer(NPQ_Handler):
             )
 
         node = Node(
-            uri=uri, value=node_id, type=NodeType.SUBJECT, label=f"{prefix}:{node_id}"
+            uri=uri,
+            prefix=prefix,
+            node_id=node_id,
         )
         return node
 
-    def explore_node(self, node: Node, summary: bool = False) -> str:
+    def explore_node(self, node: Node, triple_pos:TriplePos, summary: bool = False) -> str:
         """
         Get the appropriate exploration query based on node type
 
         Args:
             node: The node to explore from
+            triple_pos: The triple position
             summary: show a summary with counts
 
         Returns:
             Query result from the appropriate SPARQL query
         """
         query_map = {
-            NodeType.SUBJECT: (
+            TriplePos.SUBJECT: (
                 "ExploreFromSubject" if not summary else "ExploreFromSubjectSummary"
             ),
-            NodeType.PREDICATE: (
+            TriplePos.PREDICATE: (
                 "ExploreFromPredicate" if not summary else "ExploreFromPredicateSummary"
             ),
-            NodeType.OBJECT: (
+            TriplePos.OBJECT: (
                 "ExploreFromObject" if not summary else "ExploreFromObjectSummary"
             ),
         }
 
-        query_name = query_map[node.type]
-        param_dict = {"start_node": node.uri}
+        query_name = query_map[triple_pos]
+
+        param_dict = {"start_node": node.qualified_name }
 
         lod = self.query(
             query_name=query_name, param_dict=param_dict, endpoint=self.endpoint_name

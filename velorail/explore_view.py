@@ -8,7 +8,7 @@ from ngwidgets.lod_grid import ListOfDictsGrid
 from ngwidgets.webserver import WebSolution
 from nicegui import background_tasks, ui
 
-from velorail.explore import Explorer, Node, NodeType
+from velorail.explore import Explorer, Node, TriplePos
 
 
 class ExplorerView:
@@ -62,15 +62,10 @@ class ExplorerView:
         """
         get and display the exploration results
         """
-        start_node = Node(
-            uri=f"{self.prefix}{self.node_id}" if self.prefix else self.node_id,
-            value=self.node_id,
-            type=NodeType.SUBJECT,
-            label=None,
-        )
+        start_node = self.explorer.get_node(self.node_id, self.prefix)
         self.spinner.visible = True
         with self.result_row:
-            ui.label(f"Exploring {start_node.uri} on {self.endpoint_name}")
+            ui.label(f"Exploring {start_node.qualified_name} on {self.endpoint_name}")
             try:
                 lod = await background_tasks.create(
                     self.explorer.explore_node(start_node)
