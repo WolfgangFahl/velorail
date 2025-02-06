@@ -80,7 +80,10 @@ class Explorer(NPQ_Handler):
         return node
 
     def explore_node(
-        self, node: Node, triple_pos: TriplePos, summary: bool = False
+        self,
+        node: Node,
+        triple_pos: TriplePos,
+        summary: bool = False
     ) -> str:
         """
         Get the appropriate exploration query based on node type
