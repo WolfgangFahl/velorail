@@ -5,6 +5,7 @@ Created on 2025-06-02
 """
 from ngwidgets.lod_grid import ListOfDictsGrid, GridConfig
 from ngwidgets.webserver import WebSolution
+from ngwidgets.widgets import Link
 from nicegui import background_tasks, ui
 from velorail.explore import Explorer, TriplePos
 
@@ -84,11 +85,23 @@ class ExplorerView:
         # Run new task in background
         self.load_task = background_tasks.create(self.explore_node_task())
 
+    def get_view_lod(self, lod: list) -> list:
+        """Convert records to view format with row numbers and links"""
+        view_lod = []
+        for i, record in enumerate(lod):
+            view_record = {"#": i + 1}  # Number first
+            record_copy = record.copy()
+            for key, value in record_copy.items():
+                if isinstance(value, str) and value.startswith("http"):
+                    view_record[key] = Link.create(value, value)
+                else:
+                    view_record[key] = value
+            view_lod.append(view_record)
+        return view_lod
+
     def update_lod(self, lod: list):
         """Update grid with list of dicts data"""
-        # Add row numbers for selection
-        view_lod = [{"#": i, **record} for i, record in enumerate(lod)]
-
+        view_lod=self.get_view_lod(lod)
         # Configure grid with checkbox selection
         grid_config = GridConfig(
             key_col="#",

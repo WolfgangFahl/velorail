@@ -135,7 +135,7 @@ class VeloRailSolution(InputWebSolution):
     async def show_explorer(
         self,
         node_id: str = None,
-        prefix: str = "osm:relation",
+        prefix: str = "osm",
         endpoint_name: str = "osm-qlever",
         summary: bool = False,
     ):
@@ -224,8 +224,8 @@ class VeloRailWebServer(InputWebserver):
         async def explorer_page(
             client: Client,
             node_id: str,
-            prefix: str = "",
-            endpoint_name: str = "wikidata-qlever",
+            prefix: str = "osmrel",
+            endpoint_name: str = "osm-qlever",
             summary: bool = False,
         ):
             """
