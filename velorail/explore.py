@@ -22,9 +22,10 @@ class Node:
     """
     Represents a node in the RDF graph
     """
+
     prefix: str
     node_id: str
-    uri: Optional[str]= None
+    uri: Optional[str] = None
     label: Optional[str] = None
 
     @property
@@ -78,7 +79,9 @@ class Explorer(NPQ_Handler):
         )
         return node
 
-    def explore_node(self, node: Node, triple_pos:TriplePos, summary: bool = False) -> str:
+    def explore_node(
+        self, node: Node, triple_pos: TriplePos, summary: bool = False
+    ) -> str:
         """
         Get the appropriate exploration query based on node type
 
@@ -104,7 +107,7 @@ class Explorer(NPQ_Handler):
 
         query_name = query_map[triple_pos]
 
-        param_dict = {"start_node": node.qualified_name }
+        param_dict = {"start_node": node.qualified_name}
 
         lod = self.query(
             query_name=query_name, param_dict=param_dict, endpoint=self.endpoint_name

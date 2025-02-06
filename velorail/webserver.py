@@ -293,7 +293,9 @@ class VeloRailWebServer(InputWebserver):
 
             start_node = explorer.get_node(prefix=prefix, node_id=node_id)
             try:
-                lod = explorer.explore_node(start_node, triple_pos=TriplePos.SUBJECT,summary=summary)
+                lod = explorer.explore_node(
+                    start_node, triple_pos=TriplePos.SUBJECT, summary=summary
+                )
                 return {"status": "ok", "records": lod}
             except Exception as ex:
                 return {"status": "error", "message": str(ex)}

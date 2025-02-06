@@ -32,23 +32,11 @@ class TestExplorer(Basetest):
         endpoint_tests = {
             "osm": {
                 "endpoints": ["osm-qlever", "osm-sophox"],
-                "examples": {
-                    "cycle_route":
-                        {
-                            "prefix": "osmrel",
-                            "id": "10492086"
-                        }
-                    },
+                "examples": {"cycle_route": {"prefix": "osmrel", "id": "10492086"}},
             },
             "wikidata": {
                 "endpoints": ["wikidata", "wikidata-qlever"],
-                "examples": {
-                    "Tim Berners-Lee":
-                        {
-                            "prefix": "wd",
-                            "id": "Q80"
-                        }
-                    },
+                "examples": {"Tim Berners-Lee": {"prefix": "wd", "id": "Q80"}},
             },
         }
 
@@ -63,12 +51,14 @@ class TestExplorer(Basetest):
                         print(f"\nTesting {example_name} on {endpoint_name}")
 
                     # Create start node
-                    prefix=example['prefix']
-                    node_id=example["id"]
+                    prefix = example["prefix"]
+                    node_id = example["id"]
                     start_node = explorer.get_node(node_id=node_id, prefix=prefix)
                     # Get exploration results
                     for summary in (False, True):
-                        lod = explorer.explore_node(start_node,triple_pos=TriplePos.SUBJECT, summary=summary)
+                        lod = explorer.explore_node(
+                            start_node, triple_pos=TriplePos.SUBJECT, summary=summary
+                        )
                         if self.debug:
                             print(f"{len(lod)}")
                             if summary:
