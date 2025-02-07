@@ -3,6 +3,7 @@ Created on 2025-06-02
 
 @author: wf
 """
+import re
 from ngwidgets.lod_grid import ListOfDictsGrid, GridConfig
 from ngwidgets.webserver import WebSolution
 from ngwidgets.widgets import Link
@@ -25,6 +26,7 @@ class ExplorerView:
         self.node_id = None
         self.load_task = None
         self.timeout = 20.0  # seconds
+        self.wpm=self.solution.wpm
 
     def setup_ui(self):
         """Setup the basic UI container"""
@@ -92,8 +94,16 @@ class ExplorerView:
             view_record = {"#": i + 1}  # Number first
             record_copy = record.copy()
             for key, value in record_copy.items():
-                if isinstance(value, str) and value.startswith("http"):
-                    view_record[key] = Link.create(value, value)
+                if "wikidata" in self.endpoint_name:
+                    if isinstance(value, str) and value.startswith("http"):
+                        if "www.wikidata.org/prop" in value:
+                            # Get property info if it's a Wikidata property
+                            pid = re.sub(r'.*P(\d+).*', r'P\1', value)
+                            prop = self.wpm.get_property_by_id(pid)
+                            if prop:
+                                view_record[key] = Link.create(prop.url, f"{prop.plabel} ({pid})")
+                                continue
+                        view_record[key] = Link.create(value, value)
                 else:
                     view_record[key] = value
             view_lod.append(view_record)

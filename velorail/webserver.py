@@ -18,6 +18,7 @@ from velorail.gpxviewer import GPXViewer
 from velorail.locfind import LocFinder
 from velorail.version import Version
 from velorail.wditem_search import WikidataItemSearch
+from ez_wikidata.wdproperty import WikidataPropertyManager
 
 
 class VeloRailSolution(InputWebSolution):
@@ -36,6 +37,7 @@ class VeloRailSolution(InputWebSolution):
         """
         super().__init__(webserver, client)  # Call to the superclass constructor
         self.args = self.webserver.args
+        self.wpm=self.webserver.wpm
         self.viewer = GPXViewer(args=self.args)
 
     def clean_smw_artifacts(self, input_str: str) -> str:
@@ -222,6 +224,9 @@ class VeloRailWebServer(InputWebserver):
     def __init__(self):
         """Constructs all the necessary attributes for the WebServer object."""
         InputWebserver.__init__(self, config=VeloRailWebServer.get_config())
+
+        # Get property manager instance
+        self.wpm = WikidataPropertyManager.get_instance()
 
         @ui.page("/explore/{node_id}")
         async def explorer_page(
