@@ -40,7 +40,7 @@ class TestExplorer(Basetest):
             },
         }
 
-        for platform, config in endpoint_tests.items():
+        for _platform, config in endpoint_tests.items():
             for endpoint_name in config["endpoints"]:
                 explorer = Explorer(endpoint_name)
                 self.assertIsNotNone(explorer)
@@ -61,8 +61,9 @@ class TestExplorer(Basetest):
                         )
                         if self.debug:
                             print(f"{len(lod)}")
-                            if summary:
-                                print(json.dumps(lod, indent=2, default=str))
+                            debug_limit=7 if summary else 9
+                            debug_lod=lod[:debug_limit]
+                            print(json.dumps(debug_lod, indent=2, default=str))
 
     def test_merge_prefixes(self):
         """
