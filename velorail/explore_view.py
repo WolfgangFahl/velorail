@@ -121,6 +121,7 @@ class ExplorerView:
             with self.result_row:
                 self.lod_grid.load_lod(view_lod)
                 self.lod_grid.update()
+                self.lod_grid.sizeColumnsToFit()
 
     def get_selected_rows(self) -> list:
         """Get the currently selected rows from the grid"""

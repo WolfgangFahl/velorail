@@ -188,6 +188,9 @@ class VeloRailSolution(InputWebSolution):
                 # Add the new item in the second position
                 temp_items.insert(1, ("map", map_link))
 
+                explore_link = Link.create(f"/explore/{qid}?prefix=wd&endpoint_name=wikidata&summary=True", text)
+                temp_items.insert(2, ("explore", explore_link))
+
                 # Clear the original dictionary and update it with the new order of items
                 record.clear()
                 record.update(temp_items)
