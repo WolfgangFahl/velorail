@@ -94,8 +94,8 @@ class ExplorerView:
             view_record = {"#": i + 1}  # Number first
             record_copy = record.copy()
             for key, value in record_copy.items():
-                if "wikidata" in self.endpoint_name:
-                    if isinstance(value, str) and value.startswith("http"):
+                if isinstance(value, str) and value.startswith("http"):
+                    if "wikidata" in self.endpoint_name:
                         if "www.wikidata.org/prop" in value:
                             # Get property info if it's a Wikidata property
                             pid = re.sub(r'.*P(\d+).*', r'P\1', value)
@@ -103,7 +103,7 @@ class ExplorerView:
                             if prop:
                                 view_record[key] = Link.create(prop.url, f"{prop.plabel} ({pid})")
                                 continue
-                        view_record[key] = Link.create(value, value)
+                    view_record[key] = Link.create(value, value)
                 else:
                     view_record[key] = value
             view_lod.append(view_record)
