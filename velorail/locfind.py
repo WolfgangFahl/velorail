@@ -126,7 +126,7 @@ class LocFinder(NPQ_Handler):
             list of dicts containing bike route information
         """
         param_dict = {"south": south, "west": west, "north": north, "east": east}
-        lod = self.query(
+        lod = self.query_by_name(
             query_name="BikeNodes4Bounds",
             param_dict=param_dict,
             endpoint="osm-sophox",  # Using Sophox endpoint for OSM data
@@ -143,7 +143,7 @@ class LocFinder(NPQ_Handler):
         Returns:
             WikidataGeoItem with location data and metadata
         """
-        lod = self.query(query_name="WikidataGeo", param_dict={"qid": qid})
+        lod = self.query_by_name(query_name="WikidataGeo", param_dict={"qid": qid})
         if len(lod) >= 1:
             record = lod[0]
             record["qid"] = qid  # Add qid to record for WikidataGeoItem creation
@@ -151,7 +151,7 @@ class LocFinder(NPQ_Handler):
         return None
 
     def get_all_train_stations(self):
-        lod = self.query(query_name="AllTrainStations")
+        lod = self.query_by_name(query_name="AllTrainStations")
         return lod
 
     def get_train_stations_by_coordinates(

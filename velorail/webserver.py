@@ -7,6 +7,7 @@ Created on 2025-02-01
 import os
 import re
 
+from ez_wikidata.wdproperty import WikidataPropertyManager
 from ngwidgets.input_webserver import InputWebserver, InputWebSolution
 from ngwidgets.webserver import WebserverConfig
 from ngwidgets.widgets import Link
@@ -18,7 +19,6 @@ from velorail.gpxviewer import GPXViewer
 from velorail.locfind import LocFinder
 from velorail.version import Version
 from velorail.wditem_search import WikidataItemSearch
-from ez_wikidata.wdproperty import WikidataPropertyManager
 
 
 class VeloRailSolution(InputWebSolution):
@@ -37,7 +37,7 @@ class VeloRailSolution(InputWebSolution):
         """
         super().__init__(webserver, client)  # Call to the superclass constructor
         self.args = self.webserver.args
-        self.wpm=self.webserver.wpm
+        self.wpm = self.webserver.wpm
         self.viewer = GPXViewer(args=self.args)
 
     def clean_smw_artifacts(self, input_str: str) -> str:
@@ -153,10 +153,7 @@ class VeloRailSolution(InputWebSolution):
 
         def show():
             explorer_view = ExplorerView(
-                self,
-                prefix=prefix,
-                endpoint_name=endpoint_name,
-                summary=summary
+                self, prefix=prefix, endpoint_name=endpoint_name, summary=summary
             )
             explorer_view.setup_ui()
             explorer_view.show(node_id)
@@ -190,7 +187,10 @@ class VeloRailSolution(InputWebSolution):
                 # Add the new item in the second position
                 temp_items.insert(1, ("map", map_link))
 
-                explore_link = Link.create(f"/explore/{qid}?prefix=wd&endpoint_name=wikidata&summary=True", text)
+                explore_link = Link.create(
+                    f"/explore/{qid}?prefix=wd&endpoint_name=wikidata&summary=True",
+                    text,
+                )
                 temp_items.insert(2, ("explore", explore_link))
 
                 # Clear the original dictionary and update it with the new order of items

@@ -80,10 +80,7 @@ class Explorer(NPQ_Handler):
         return node
 
     def explore_node(
-        self,
-        node: Node,
-        triple_pos: TriplePos,
-        summary: bool = False
+        self, node: Node, triple_pos: TriplePos, summary: bool = False
     ) -> str:
         """
         Get the appropriate exploration query based on node type
@@ -112,7 +109,7 @@ class Explorer(NPQ_Handler):
 
         param_dict = {"start_node": node.qualified_name}
 
-        lod = self.query(
+        lod = self.query_by_name(
             query_name=query_name, param_dict=param_dict, endpoint=self.endpoint_name
         )
         return lod

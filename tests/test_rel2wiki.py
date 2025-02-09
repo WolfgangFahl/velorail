@@ -8,86 +8,14 @@ import json
 from argparse import Namespace
 
 from ngwidgets.basetest import Basetest
-
+from velorail.querygen import QueryGen
 from velorail.locfind import NPQ_Handler
 from velorail.rel2wiki import OsmRelConverter
 
 
-class QueryGen:
-    """
-    Generator for SPARQL queries based on property count query results.
-    """
-
-    def __init__(self, prefixes):
-        """
-        Initialize the QueryGen with a dictionary of prefixes.
-        """
-        self.prefixes = prefixes
-
-    def sanitize_variable_name(self, prop):
-        """
-        Convert a prefixed prop into a valid SPARQL variable name.
-        """
-        parts = prop.split(":")
-        var_name = ""
-        if parts:
-            var_name = parts[-1]
-            for invalid in ["-", ":", "#"]:
-                var_name = var_name.replace(invalid, "_")
-        var_name = f"{var_name}"
-        return var_name
-
-    def get_prefixed_property(self, prop):
-        """
-        Convert a full URI into a prefixed SPARQL property if a matching prefix is found.
-        """
-        prefixed_prop = f"<{prop}>"
-        for prefix, uri in self.prefixes.items():
-            if prop.startswith(uri):
-                prefixed_prop = prop.replace(uri, f"{prefix}:")
-                break
-        return prefixed_prop
-
-    def gen(self, lod, main_var: str, main_value: str, first_x: int = 5):
-        """
-        Generate a SPARQL query dynamically based on the lod results.
-        """
-        sparql_query = "# generated Query"
-        properties = {}
-        for record in lod:
-            if record["count"] == "1":
-                prop = record["p"]
-                prefixed_prop = self.get_prefixed_property(prop)
-                var_name = self.sanitize_variable_name(prefixed_prop)
-                properties[var_name] = (prop, prefixed_prop)
-        for key, value in self.prefixes.items():
-            sparql_query += f"\nPREFIX {key}: <{value}>"
-
-        sparql_query += f"\nSELECT ?{main_var}"
-
-        for i, var_name in enumerate(properties.keys()):
-            comment = "" if i < first_x else "#"
-            sparql_query += f"\n{comment}  ?{var_name}"
-
-        sparql_query += "\nWHERE {\n"
-
-        sparql_query += f"  VALUES (?{main_var}) {{ ({main_value}) }}\n"
-
-        for i, (var_name, (prop, prefixed_prop)) in enumerate(properties.items()):
-            comment = "" if i < first_x else "#"
-            sparql_query += f"# {prop}\n"
-            sparql_query += (
-                f"{comment} OPTIONAL {{ ?rel {prefixed_prop} ?{var_name} }} .\n"
-            )
-
-        sparql_query += "}"  # Closing WHERE clause
-
-        return sparql_query
-
-
 class TestRel2wiki(Basetest):
     """
-    test locfinder
+    test  rel2wiki script
     """
 
     def setUp(self, debug=True, profile=True):
@@ -113,7 +41,7 @@ class TestRel2wiki(Basetest):
         test queries to explore correct OSM Planet SPAQRL queries
         """
         for query_name in ["Relation1", "RelationExplore"]:
-            lod = self.query_handler.query(
+            lod = self.query_handler.query_by_name(
                 query_name=query_name,
                 param_dict={"relid": "10492086"},
                 endpoint="osm-qlever",
@@ -163,7 +91,7 @@ class TestRel2wiki(Basetest):
         param_dict = {"relid": "10492086"}
         endpoint = "osm-qlever"
 
-        lod = self.query_handler.query(
+        lod = self.query_handler.query_by_name(
             query_name=query_name, param_dict=param_dict, endpoint=endpoint
         )
         if self.debug:

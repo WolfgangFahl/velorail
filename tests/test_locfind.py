@@ -33,7 +33,7 @@ class TestLocFinder(Basetest):
             "description": "railway station in Biarritz, France",
         }
 
-        lod = locfinder.query(query_name="WikidataGeo", param_dict={"qid": qid})
+        lod = locfinder.query_by_name(query_name="WikidataGeo", param_dict={"qid": qid})
         self.assertTrue(len(lod) >= 1)
         record = lod[0]
 

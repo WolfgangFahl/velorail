@@ -10,6 +10,7 @@ from pathlib import Path
 
 from lodstorage.query import EndpointManager, Query, QueryManager
 from lodstorage.sparql import SPARQL
+from lodstorage import sparql
 
 
 class NPQ_Handler:
@@ -129,7 +130,7 @@ class NPQ_Handler:
         merged_query = "\n".join(merged_prefix_lines) + f"\n\n{body_section}"
         return merged_query
 
-    def query(
+    def query_by_name(
         self,
         query_name: str,
         param_dict: dict = {},
@@ -152,11 +153,39 @@ class NPQ_Handler:
         if not query:
             raise ValueError(f"{query_name} is not defined!")
 
+        # Get the query string and handle prefixes
+        sparql_query = query.query
+        lod=self.query(
+            sparql_query=sparql_query,
+            param_dict=param_dict,
+            endpoint=endpoint,
+            auto_prefix=auto_prefix
+        )
+        return lod
+
+    def query(
+        self,
+        sparql_query: str,
+        param_dict: dict = {},
+        endpoint: str = "wikidata-qlever",
+        auto_prefix: bool = True,
+    ):
+        """
+        Get the result of the given query.
+
+        Args:
+            sparql_query (str): the query to execute.
+            param_dict (dict): Dictionary of parameters to substitute.
+            endpoint (str): Name of the endpoint to use.
+            auto_prefix (bool): Whether to automatically add endpoint prefixes.
+
+        Returns:
+            list: List of dictionaries with query results.
+        """
+
         sparql_endpoint = self.endpoints[endpoint]
         endpoint_instance = SPARQL(sparql_endpoint.endpoint)
 
-        # Get the query string and handle prefixes
-        sparql_query = query.query
         if auto_prefix:
             logging.debug(f"Auto prefixing for endpoint: {endpoint}")
             sparql_query = self.merge_prefixes_by_endpoint_name(sparql_query, endpoint)
