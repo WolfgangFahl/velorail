@@ -156,7 +156,10 @@ WHERE {
         return query
 
     def update_node_info(self):
-        info="{self.prefix}:{self.node_id} Endpoint: {self.endpoint_name}"
+        """
+        update the node info
+        """
+        info=f"{self.prefix}:{self.node_id} Endpoint: {self.endpoint_name}"
         with self.header_row:
             self.node_info.content=info
 
@@ -274,6 +277,7 @@ WHERE {
             editable=False,
             multiselect=True,
             with_buttons=True,
+            button_names=["all","fit"],
             debug=False,
         )
 
