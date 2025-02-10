@@ -18,6 +18,7 @@
   lang: sparql
   prefixes: |
     PREFIX osmrel: <https://www.openstreetmap.org/relation/>
+    PREFIX osmnode: <https://www.openstreetmap.org/node/>
     PREFIX osmt: <https://www.openstreetmap.org/wiki/Key:>
     PREFIX osmm: <https://www.openstreetmap.org/meta/>
     PREFIX geo: <http://www.opengis.net/ont/geosparql#>
