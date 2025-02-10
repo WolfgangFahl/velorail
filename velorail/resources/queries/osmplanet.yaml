@@ -62,12 +62,6 @@
       type: float
       default_value: 4.00
   sparql: |
-    PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-    PREFIX osm2rdfmember: <https://osm2rdf.cs.uni-freiburg.de/rdf/member#>
-    PREFIX osmrel: <https://www.openstreetmap.org/relation/>
-    PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>
-    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
     SELECT
       ?rel_name
       ?rel
@@ -83,13 +77,13 @@
       VALUES (?rel ?role ?minlat ?maxlat ?minlon ?maxlon) {
         (osmrel:{{relid}} "{{role}}" {{min_lat}} {{max_lat}} {{min_lon}} {{max_lon}})
       }
-      ?rel osmkey:ref ?rel_name .
-      ?rel osmrel:member_ref ?member .
+      ?rel osmt:ref ?rel_name .
+      ?rel osmrel:member ?member .
       ?member osmrel:member_pos ?rel_pos .
       ?member osmrel:member_role ?role .
       ?member osmrel:member_id ?node .
-      OPTIONAL { ?node osmkey:name ?node_name}.
-      OPTIONAL { ?node osmkey:ref ?node_ref}.
+      OPTIONAL { ?node osmt:name ?node_name}.
+      OPTIONAL { ?node osmt:ref ?node_ref}.
       ?node geo:hasGeometry/geo:asWKT ?loc .
       BIND(geof:latitude(?loc) AS ?lat)
       BIND(geof:longitude(?loc) AS ?lon)

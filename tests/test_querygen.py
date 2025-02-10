@@ -48,6 +48,22 @@ class TestQueryGen(Basetest):
                 expected = f"{prefix}:{prop}"
                 self.assertEqual(short_prop, expected)
 
+    def testQueryGenSanitize(self):
+        """
+        Test QueryGen functions for correct prefix handling and variable sanitization.
+        """
+        query_gen = QueryGen(self.prefixes)
+        expected_results = {
+            "osmkey:ref": "ref",
+            "meta:uid": "uid",
+            "rdf:type": "type",
+        }
+
+        for prop, expected in expected_results.items():
+            with self.subTest(prop=prop):
+                sanitized = query_gen.sanitize_variable_name(prop)
+                self.assertEqual(sanitized, expected)
+
     def test_gen_query(self):
         """
         Test SPARQL query generation.

@@ -22,6 +22,7 @@
     PREFIX osmt: <https://www.openstreetmap.org/wiki/Key:>
     PREFIX osmm: <https://www.openstreetmap.org/meta/>
     PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
     PREFIX osm2rdf: <https://osm2rdf.cs.uni-freiburg.de/rdf#>
     PREFIX osm2rdfgeom: <https://osm2rdf.cs.uni-freiburg.de/rdf/geom#>
     PREFIX osm2rdfkey: <https://osm2rdf.cs.uni-freiburg.de/rdf/key#>

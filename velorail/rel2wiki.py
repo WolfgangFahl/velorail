@@ -11,6 +11,7 @@ from lodstorage.sparql import SPARQL
 
 from velorail.locfind import LocFinder
 from velorail.tour import LegStyles
+from velorail.npq import NPQ_Handler
 
 
 class OsmRelConverter:
@@ -27,10 +28,7 @@ class OsmRelConverter:
         """
         self.args = args
         self.tmpdir = args.tmp
-        self.loc_finder = LocFinder()
-        self.endpoints = self.loc_finder.endpoints
-        self.endpoint = self.endpoints.get(args.endpoint_name)
-        self.sparql = SPARQL.fromEndpointConf(self.endpoint)
+        self.query_handler=NPQ_Handler("osmplanet.yaml",debug=args.debug)
         self.leg_style = LegStyles.default()
         self.test = False
 
@@ -115,13 +113,6 @@ class OsmRelConverter:
         Returns:
              Dict: The query results as list of dicts
         """
-        if not self.args.queriesPath:
-            self.args.queriesPath = self.loc_finder.query_path / "osmplanet.yaml"
-        qm = QueryManager(
-            lang="sparql", debug=self.args.debug, queriesPath=self.args.queriesPath
-        )
-        self.query = qm.queriesByName[self.args.queryName]
-
         param_dict = {
             "relid": rel,
             "role": self.args.role,
@@ -134,16 +125,12 @@ class OsmRelConverter:
         if self.args.debug:
             print(f"Querying relation {rel}")
 
-        query_result = self.sparql.queryAsListOfDicts(
-            self.query.query, param_dict=param_dict
-        )
-        if self.args.debug:
-            queryString = self.query.query
-            params = Params(queryString)
-            queryString = params.apply_parameters_with_check(param_dict)
-            print(queryString)
-            pass
-        return query_result
+        lod=self.query_handler.query_by_name(
+            query_name=self.args.queryName,
+            param_dict=param_dict,
+            endpoint=self.args.endpoint_name,
+            auto_prefix=True)
+        return lod
 
     def to_mediawiki(self, rel: str, data: Dict) -> str:
         """

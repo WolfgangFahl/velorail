@@ -12,7 +12,6 @@ from velorail.querygen import QueryGen
 from velorail.locfind import NPQ_Handler
 from velorail.rel2wiki import OsmRelConverter
 
-
 class TestRel2wiki(Basetest):
     """
     test  rel2wiki script
@@ -21,7 +20,7 @@ class TestRel2wiki(Basetest):
     def setUp(self, debug=True, profile=True):
         Basetest.setUp(self, debug=debug, profile=profile)
         self.tmp_path = "/tmp"
-        self.query_handler = NPQ_Handler(yaml_file="osmplanet_explore.yaml")
+        self.query_handler = NPQ_Handler(yaml_file="osmplanet_explore.yaml",debug=self.debug)
         self.prefixes = {
             "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "geo": "http://www.opengis.net/ont/geosparql#",
@@ -51,23 +50,6 @@ class TestRel2wiki(Basetest):
                 print(json.dumps(lod, indent=2))
 
 
-
-    def testQueryGenSanitize(self):
-        """
-        Test QueryGen functions for correct prefix handling and variable sanitization.
-        """
-        query_gen = QueryGen(self.prefixes)
-        expected_results = {
-            "osmkey:ref": "ref",
-            "meta:uid": "uid",
-            "rdf:type": "type",
-        }
-
-        for prop, expected in expected_results.items():
-            with self.subTest(prop=prop):
-                sanitized = query_gen.sanitize_variable_name(prop)
-                self.assertEqual(sanitized, expected)
-
     def testQueryGen(self):
         """
         test generating a query
@@ -85,7 +67,12 @@ class TestRel2wiki(Basetest):
         query_gen = QueryGen(self.prefixes)
         relid = param_dict["relid"]
         value = f"osmrel:{relid}"
-        sparql_query = query_gen.gen(lod, main_var="rel", main_value=value, first_x=9)
+        sparql_query = query_gen.gen(lod,
+            main_var="rel",
+            main_value=value,
+            first_x=9,
+            max_cardinality=1,
+            comment_out=True)
 
         if self.debug:
             print("Generated SPARQL Query:")

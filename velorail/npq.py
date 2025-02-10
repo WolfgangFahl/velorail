@@ -9,23 +9,27 @@ import re
 from pathlib import Path
 
 from lodstorage.query import EndpointManager, Query, QueryManager
-from lodstorage.sparql import SPARQL
-from lodstorage import sparql
-
+from lodstorage.sparql import SPARQL, Params
 
 class NPQ_Handler:
     """
     Handling of named parameterized queries
     """
 
-    def __init__(self, yaml_file: str, with_default: bool = False):
+    def __init__(self,
+        yaml_file: str,
+        with_default: bool = False,
+        debug:bool=False):
         """
         Constructor
 
         Args:
             yaml_file (str): The YAML file containing the queries.
             with_default (bool): Whether to include default endpoints.
+            debug(bool): if True switch on debug mode
         """
+
+        self.debug=debug
         self.endpoint_path = Path(__file__).parent / "resources" / "endpoints.yaml"
         self.query_path = Path(__file__).parent / "resources" / "queries"
         self.query_yaml = self.query_path / yaml_file
@@ -192,5 +196,11 @@ class NPQ_Handler:
         logging.debug(f"SPARQL query:\n{sparql_query}")
 
         # Execute query
-        lod = endpoint_instance.queryAsListOfDicts(sparql_query, param_dict=param_dict)
+        lod = endpoint_instance.queryAsListOfDicts(
+            sparql_query,
+            param_dict=param_dict)
+        if self.debug:
+            params = Params(sparql_query)
+            final_query = params.apply_parameters_with_check(param_dict)
+            print(final_query)
         return lod
