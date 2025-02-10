@@ -3,7 +3,7 @@ Created on 2025-02-09
 
 @author: wf
 """
-
+import json
 from ngwidgets.basetest import Basetest
 
 from velorail.explore import Explorer, TriplePos
@@ -12,50 +12,48 @@ from velorail.querygen import QueryGen
 
 class TestQueryGen(Basetest):
     """
-    test querygen  script
+    test SPARQL Query Generator for explorer
     """
 
     def setUp(self, debug=True, profile=True):
         Basetest.setUp(self, debug=debug, profile=profile)
-        self.endpoint_name = "osm-qlever"
-        self.explorer = Explorer(self.endpoint_name)
-        prefixes = self.explorer.endpoint_prefixes.get(self.endpoint_name)
-        self.query_gen = QueryGen(prefixes=prefixes, debug=self.debug)
 
     def test_gen_query(self):
         """
         Test SPARQL query generation.
         """
-        main_var = "item"
-        prefix = "osmrel"
-        for node_id, expected_keys in [
-            ("2172017", 24),
-            ("10492086", 32)
+        for title,main_var,prefix,node_id, endpoint_name,first_x,comment_out,expected_keys in [
+            ("Vía Verde (Burgos - Túnel de La Engaña)","bike_route","osmrel","2172017","osm-qlever",1000,False, 24),
+            ("MD 18061","train_route","osmrel","10492086","osm-qlever",1000,False, 32),
+            ("Christian Ronaldo","person","wd","Q11571","wikidata-qlever",5,False, 1)
         ]:
             with self.subTest(node_id=node_id):
-                start_node = self.explorer.get_node(node_id, prefix)
-                qlod = self.explorer.explore_node(
+                explorer = Explorer(endpoint_name)
+                prefixes = explorer.endpoint_prefixes.get(endpoint_name)
+                query_gen = QueryGen(prefixes=prefixes, debug=self.debug)
+                start_node = explorer.get_node(node_id, prefix)
+                qlod = explorer.explore_node(
                     node=start_node, triple_pos=TriplePos.SUBJECT, summary=True
                 )
-                lod = []
-                for record in qlod:
-                    if record["count"] == "1":
-                        lod.append(record)
-                        #print (record)
-                generated_query = self.query_gen.gen(
-                    lod=lod,
+                generated_query = query_gen.gen(
+                    lod=qlod,
                     main_var=main_var,
                     main_value=start_node.qualified_name,
-                    first_x=10000,
+                    max_cardinality=1,
+                    first_x=first_x,
+                    comment_out=comment_out
                 )
                 if self.debug:
                     print(generated_query)
-                lod=self.explorer.query(
+                lod=explorer.query(
                     sparql_query=generated_query,
                     param_dict={},
-                    endpoint=self.endpoint_name
+                    endpoint=endpoint_name
                 )
                 # we expect a single but long record
                 self.assertEqual(len(lod),1)
                 record=lod[0]
+                if self.debug:
+                    print(title)
+                    print(json.dumps(record,indent=2,default=str))
                 self.assertEqual(len(record.keys()),expected_keys)

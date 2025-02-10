@@ -155,6 +155,12 @@ WHERE {
         )
         return query
 
+    def update_node_info(self):
+        info="{self.prefix}:{self.node_id} Endpoint: {self.endpoint_name}"
+        with self.header_row:
+            self.node_info.content=info
+
+
     def setup_ui(self):
         """Setup the basic UI container"""
         with ui.splitter() as splitter:
@@ -162,14 +168,14 @@ WHERE {
                 self.header_row = ui.row()
                 with self.header_row:
                     self.node_info = ui.html(
-                        f"{self.prefix}:{self.node_id} Endpoint: {self.endpoint_name}"
+                        f""
                     )
                     ui.button(
                         "Generate Query", icon="code", on_click=self.on_generate_query
                     )
                     self.result_row = ui.row().classes("w-full")
             with splitter.after:
-                ui.button("run", icon="code", on_click=self.on_run_query)
+                ui.button("run", icon="run", on_click=self.on_run_query)
                 self.query_code = (
                     ui.code(content=self.get_default_query(), language="SPARQL")
                     .classes("w-full")
@@ -179,6 +185,7 @@ WHERE {
     def show(self, node_id: str):
         """Show exploration results for a given node ID"""
         self.node_id = node_id
+        self.update_node_info()
         self.run_exploration()
 
     async def explore_node_task(self):
@@ -273,8 +280,9 @@ WHERE {
         # Create or update grid
         if self.lod_grid is None:
             with self.result_row:
-                self.lod_grid = ListOfDictsGrid(lod=view_lod, config=grid_config)
-                self.lod_grid.setup_button_row(["fit", "all"])
+                self.lod_grid = ListOfDictsGrid(
+                    lod=view_lod,
+                    config=grid_config)
         else:
             with self.result_row:
                 self.lod_grid.load_lod(view_lod)
