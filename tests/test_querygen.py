@@ -17,6 +17,36 @@ class TestQueryGen(Basetest):
 
     def setUp(self, debug=True, profile=True):
         Basetest.setUp(self, debug=debug, profile=profile)
+        self.prefixes = {
+            "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+            "geo": "http://www.opengis.net/ont/geosparql#",
+            "geof": "http://www.opengis.net/def/function/geosparql/",
+            "ogc": "http://www.opengis.net/rdf#",
+            "osmkey": "https://www.openstreetmap.org/wiki/Key:",
+            "osm2rdfmember": "https://osm2rdf.cs.uni-freiburg.de/rdf/member#",
+            "osmrel": "https://www.openstreetmap.org/relation/",
+            "osm2rdf": "https://osm2rdf.cs.uni-freiburg.de/rdf/",
+            "osm2rdf_geom": "https://osm2rdf.cs.uni-freiburg.de/rdf/geom#",
+            "meta": "https://www.openstreetmap.org/meta/",
+            "xsd": "http://www.w3.org/2001/XMLSchema#",
+        }
+
+    def testQueryGenPrefix(self):
+        """
+        test queries to explore correct OSM Planet SPAQRL queries
+        """
+        query_gen = QueryGen(self.prefixes)
+        for prefix, prop in [
+            ("osmkey", "ref"),
+            ("meta", "uid"),
+            ("rdf", "type"),
+        ]:
+            with self.subTest(prefix=prefix, prop=prop):
+                prefix_uri = self.prefixes[prefix]
+                long_prop = f"{prefix_uri}{prop}"
+                short_prop = query_gen.get_prefixed_property(long_prop)
+                expected = f"{prefix}:{prop}"
+                self.assertEqual(short_prop, expected)
 
     def test_gen_query(self):
         """

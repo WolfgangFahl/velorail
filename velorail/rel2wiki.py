@@ -5,7 +5,7 @@ from argparse import ArgumentParser, Namespace
 from typing import Dict, List
 
 from lodstorage.params import Params
-from lodstorage.query import EndpointManager, QueryManager
+from lodstorage.query import   QueryManager
 from lodstorage.query_cmd import QueryCmd
 from lodstorage.sparql import SPARQL
 

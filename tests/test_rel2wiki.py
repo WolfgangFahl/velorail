@@ -50,22 +50,7 @@ class TestRel2wiki(Basetest):
                 print(f"Query: {query_name}:")
                 print(json.dumps(lod, indent=2))
 
-    def testQueryGenPrefix(self):
-        """
-        test queries to explore correct OSM Planet SPAQRL queries
-        """
-        query_gen = QueryGen(self.prefixes)
-        for prefix, prop in [
-            ("osmkey", "ref"),
-            ("meta", "uid"),
-            ("rdf", "type"),
-        ]:
-            with self.subTest(prefix=prefix, prop=prop):
-                prefix_uri = self.prefixes[prefix]
-                long_prop = f"{prefix_uri}{prop}"
-                short_prop = query_gen.get_prefixed_property(long_prop)
-                expected = f"{prefix}:{prop}"
-                self.assertEqual(short_prop, expected)
+
 
     def testQueryGenSanitize(self):
         """
