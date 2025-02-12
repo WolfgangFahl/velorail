@@ -193,14 +193,17 @@ class NPQ_Handler:
         if auto_prefix:
             logging.debug(f"Auto prefixing for endpoint: {endpoint}")
             sparql_query = self.merge_prefixes_by_endpoint_name(sparql_query, endpoint)
-        logging.debug(f"SPARQL query:\n{sparql_query}")
+        msg=f"SPARQL query:\n{sparql_query}"
+        logging.debug(msg)
+        if self.debug:
+            print(msg)
+            params = Params(sparql_query)
+            final_query = params.apply_parameters_with_check(param_dict)
+            print("parameterized query:")
+            print(final_query)
 
         # Execute query
         lod = endpoint_instance.queryAsListOfDicts(
             sparql_query,
             param_dict=param_dict)
-        if self.debug:
-            params = Params(sparql_query)
-            final_query = params.apply_parameters_with_check(param_dict)
-            print(final_query)
         return lod

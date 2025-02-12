@@ -40,30 +40,20 @@
       osmrel:{{relid}} ?p ?o .
       FILTER(STRSTARTS(STR(?o), "https://www.openstreetmap.org/node/"))
     }
-'RelationNodesGeo':
-  # get geometry data for relation elements with a given role including lat/lon filtering
+'ItemNodesGeo':
+  # get geometry data for item member
+  # elements with a given role
   param_list:
     - name: relid
       type: str
       default_value: "10492086"
     - name: role
       type: str
-      default_value: "stop"
-    - name: min_lat
-      type: float
-      default_value: 36.00
-    - name: max_lat
-      type: float
-      default_value: 44.00
-    - name: min_lon
-      type: float
-      default_value: -9.00
-    - name: max_lon
-      type: float
-      default_value: 4.00
+      default_value: "member"
   sparql: |
     SELECT
       ?rel_name
+      ?rel_ref
       ?rel
       ?rel_pos
       ?member
@@ -71,24 +61,26 @@
       ?node_name
       ?node_ref
       ?role
-      ?lat
-      ?lon
+      ?loc
     WHERE {
-      VALUES (?rel ?role ?minlat ?maxlat ?minlon ?maxlon) {
-        (osmrel:{{relid}} "{{role}}" {{min_lat}} {{max_lat}} {{min_lon}} {{max_lon}})
+      VALUES (?rel ?role ) {
+        (osmrel:{{relid}} "{{role}}" )
       }
-      ?rel osmt:ref ?rel_name .
+      # names and refs if available
+      OPTIONAL { ?rel osmt:ref  ?rel_ref  }.
+      OPTIONAL { ?rel osmt:name ?rel_name }.
+      # list of members with position and role
       ?rel osmrel:member ?member .
       ?member osmrel:member_pos ?rel_pos .
       ?member osmrel:member_role ?role .
       ?member osmrel:member_id ?node .
+      # names and refs if available
+      OPTIONAL { ?node osmt:ref  ?node_ref}.
       OPTIONAL { ?node osmt:name ?node_name}.
-      OPTIONAL { ?node osmt:ref ?node_ref}.
+      # get location info
       ?node geo:hasGeometry/geo:asWKT ?loc .
-      BIND(geof:latitude(?loc) AS ?lat)
-      BIND(geof:longitude(?loc) AS ?lon)
-      FILTER (?lat > ?minlat && ?lat < ?maxlat && ?lon > ?minlon && ?lon < ?maxlon)
     }
+    # order along the node chain
     ORDER BY ?rel_pos
 'RouteTypeHistogram':
   sparql: |

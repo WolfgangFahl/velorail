@@ -23,7 +23,10 @@ dependencies = [
     "pandas",
     "numpy",
     # https://pypi.org/project/py-ez-wikidata/
-	"py-ez-wikidata>=0.2.3"
+	"py-ez-wikidata>=0.2.3",
+	# shapely
+	# https://github.com/shapely/shapely
+	"shapely>=2.0.7"
  ]
 
 requires-python = ">=3.9"
@@ -66,4 +69,4 @@ only-include = ["velorail","velorail_examples"]
 [project.scripts]
 velorail = "velorail.velorail_cmd:main"
 gpxviewer = "velorail.velorail_cmd:main"
-rel2wiki = "velorail.rel2wiki:main"
+osm2wiki = "velorail.osm2wiki:main"

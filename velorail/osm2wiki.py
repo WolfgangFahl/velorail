@@ -3,20 +3,14 @@ import json
 import os
 from argparse import ArgumentParser, Namespace
 from typing import Dict, List
-
-from lodstorage.params import Params
-from lodstorage.query import   QueryManager
 from lodstorage.query_cmd import QueryCmd
-from lodstorage.sparql import SPARQL
-
-from velorail.locfind import LocFinder
 from velorail.tour import LegStyles
 from velorail.npq import NPQ_Handler
+from velorail.wkt import WKT
 
-
-class OsmRelConverter:
+class Osm2WikiConverter:
     """
-    Converter for OSM relations to MediaWiki pages
+    Converter for OSM relations and nodes to MediaWiki pages
     """
 
     def __init__(self, args: Namespace):
@@ -36,7 +30,7 @@ class OsmRelConverter:
     def get_parser(cls):
         """Get the argument parser"""
         parser = ArgumentParser(
-            description="Convert OpenStreetMap railway relations to MediaWiki pages"
+            description="Convert OpenStreetMap relations and nodes to MediaWiki pages"
         )
         # Add standard query command args
         QueryCmd.add_args(parser)
@@ -93,28 +87,47 @@ class OsmRelConverter:
             help="Wiki category (default: %(default)s)",
         )
         parser.add_argument(
-            "relations",
+            "--loc_type",
+            default="osm_node",
+            help="location type (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--transport",
+            default="bike",
+            help="transport (default: %(default)s)",
+        )
+        parser.add_argument(
+            "--osm_items",
             nargs="*",
-            default=["10492086", "4220975"],
-            help="Relation IDs to process [default: %(default)s]",
+            default=["relation/10492086", "relation/4220975","relation/1713826","node/11757382798"],
+            help="osm items to process [default: %(default)s]",
         )
         args = parser.parse_args()
-        if not args.queryName:
-            args.queryName = "RelationNodesGeo"
         return args
 
-    def query_rel(self, rel: str) -> Dict:
+    def query_osm_item(self, osm_item: str) -> Dict:
         """
-        Query the given relation using SPARQL
+        Query the given osm_item using SPARQL
 
         Args:
-             rel: The relation ID to query
+             osm_item: The osm_item to query
 
         Returns:
              Dict: The query results as list of dicts
         """
+        if osm_item.startswith("relation"):
+            queryName="ItemNodesGeo"
+            id_key="relid"
+            osm_id=osm_item.replace("relation/","")
+        elif osm_item.startswith("node"):
+            queryName="NodeGeo"
+            id_key="osm_id"
+            osm_id=osm_item.replace("node/","")
+        else:
+            raise ValueError(f"invalid osm_item {osm_item}")
+
         param_dict = {
-            "relid": rel,
+            id_key: osm_id,
             "role": self.args.role,
             "min_lat": str(self.args.min_lat),
             "max_lat": str(self.args.max_lat),
@@ -123,28 +136,28 @@ class OsmRelConverter:
         }
 
         if self.args.debug:
-            print(f"Querying relation {rel}")
+            print(f"Querying osm_item {osm_item}")
 
         lod=self.query_handler.query_by_name(
-            query_name=self.args.queryName,
+            query_name=queryName,
             param_dict=param_dict,
             endpoint=self.args.endpoint_name,
             auto_prefix=True)
         return lod
 
-    def to_mediawiki(self, rel: str, data: Dict) -> str:
+    def to_mediawiki(self, osm_item: str, data: Dict) -> str:
         """
         Convert relation data to MediaWiki format
 
         Args:
-             rel: Relation ID
+             osm_item: Relation ID
              data: JSON data from query
 
         Returns:
              str: MediaWiki page content
         """
         wiki = f"""= Map =
-https://www.openstreetmap.org/relation/{rel}
+https://www.openstreetmap.org/{osm_item}
 {{{{LegMap
 |zoom={self.args.zoom}
 }}}}
@@ -153,13 +166,17 @@ https://www.openstreetmap.org/relation/{rel}
 """
         # Add locations
         for item in data:
-            node_id = item["node"].split("/")[-1]
+            node=item["node"]
+            node_id = node.split("/")[-1]
+            wkt=item["loc"]
+            latlon=WKT.wkt_to_latlon_str(wkt)
+            name=item.get("node_name", node_id)
             loc = f"""{{{{Loc
 |id={node_id}
-|latlon={item["lat"]},{item["lon"]}
-|name={item.get("node_name", node_id)}
-|url=https://www.openstreetmap.org/node/{node_id}
-|type=train_station
+|latlon={latlon}
+|name={name}
+|url={node}
+|type={self.args.loc_type}
 |address={self.args.country}
 |storemode=subobject
 }}}}
@@ -175,7 +192,7 @@ https://www.openstreetmap.org/relation/{rel}
 |wp_num={item["rel_pos"]}
 |from={previous["node"].split("/")[-1]}
 |to={item["node"].split("/")[-1]}
-|transport=train
+|transport={self.args.transport}
 |storemode=subobject
 }}}}
 """
@@ -185,42 +202,44 @@ https://www.openstreetmap.org/relation/{rel}
         wiki += f"\n<headertabs/>\n[[Category:{self.args.category}]]"
         return wiki
 
-    def process_relations(self, relations: List[str], with_write: bool = True):
+    def process_osm_items(self, osm_items: List[str], with_write: bool = True):
         """
-        Process the given relations
+        Process the given osm_items
 
         Args:
-             relations: List of relation IDs to process
+             osm_items: List of osm_items to process
+             e.g. relation/<osm_id> or node/<osm_id>
         """
-        for rel in relations:
-            json_file = os.path.join(self.tmpdir, f"osm_{rel}.json")
-            wiki_file = os.path.join(self.tmpdir, f"{rel}.wiki")
+        for osm_item in osm_items:
+            base_name=osm_item.replace("/","_")
+            json_file = os.path.join(self.tmpdir, f"osm_{base_name}.json")
+            self.wiki_file = os.path.join(self.tmpdir, f"{base_name}.wiki")
 
             if not self.test:
-                print(f"Processing relation {rel}")
+                print(f"Processing osm item {osm_item}")
 
             # Query and save JSON
-            data = self.query_rel(rel)
+            data = self.query_osm_item(osm_item)
             if with_write:
                 with open(json_file, "w") as f:
                     json.dump(data, f, indent=2)
 
             # Convert to wiki and save
-            wiki = self.to_mediawiki(rel, data)
+            wiki = self.to_mediawiki(osm_item, data)
             if with_write:
-                with open(wiki_file, "w") as f:
+                with open(self.wiki_file, "w") as f:
                     f.write(wiki)
 
             if not self.test:
-                print(f"Created {wiki_file}")
+                print(f"Created {self.wiki_file}")
         return data
 
 
 def main():
     """Main entry point"""
-    args = OsmRelConverter.get_parser()
-    converter = OsmRelConverter(args=args)
-    converter.process_relations(args.relations)
+    args = Osm2WikiConverter.get_parser()
+    converter = Osm2WikiConverter(args=args)
+    converter.process_osm_items(args.osm_items)
 
 
 if __name__ == "__main__":

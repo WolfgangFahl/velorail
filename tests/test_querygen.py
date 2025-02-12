@@ -8,7 +8,7 @@ from ngwidgets.basetest import Basetest
 
 from velorail.explore import Explorer, TriplePos
 from velorail.querygen import QueryGen
-
+from velorail.npq import NPQ_Handler
 
 class TestQueryGen(Basetest):
     """
@@ -17,6 +17,8 @@ class TestQueryGen(Basetest):
 
     def setUp(self, debug=True, profile=True):
         Basetest.setUp(self, debug=debug, profile=profile)
+        self.query_handler = NPQ_Handler(yaml_file="osmplanet_explore.yaml",debug=self.debug)
+
         self.prefixes = {
             "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "geo": "http://www.opengis.net/ont/geosparql#",
@@ -30,6 +32,34 @@ class TestQueryGen(Basetest):
             "meta": "https://www.openstreetmap.org/meta/",
             "xsd": "http://www.w3.org/2001/XMLSchema#",
         }
+
+    def testQueryGen(self):
+        """
+        test generating a query
+        """
+        query_name = "RelationExplore"
+        param_dict = {"relid": "10492086"}
+        endpoint = "osm-qlever"
+
+        lod = self.query_handler.query_by_name(
+            query_name=query_name, param_dict=param_dict, endpoint=endpoint
+        )
+        if self.debug:
+            print(f"Query: {query_name}:")
+            print(json.dumps(lod, indent=2))
+        query_gen = QueryGen(self.prefixes)
+        relid = param_dict["relid"]
+        value = f"osmrel:{relid}"
+        sparql_query = query_gen.gen(lod,
+            main_var="rel",
+            main_value=value,
+            first_x=9,
+            max_cardinality=1,
+            comment_out=True)
+
+        if self.debug:
+            print("Generated SPARQL Query:")
+            print(sparql_query)
 
     def testQueryGenPrefix(self):
         """
