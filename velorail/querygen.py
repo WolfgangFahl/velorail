@@ -134,7 +134,8 @@ class QueryGen:
         ):
             if not (comment_out and comment):
                 sparql_query += f"    # {prop}\n"
-                sparql_query += f"    # {wdp.plabel}\n"
+                if wdp: # label but not description to avoid url encoding and other issues like param length overrun
+                    sparql_query += f"    # {wdp.plabel}\n"
                 sparql_query += (
                     f"    {comment}?{main_var} {prefixed_prop} ?{var_name} .\n"
                 )
