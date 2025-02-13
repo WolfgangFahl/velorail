@@ -101,6 +101,7 @@ class Explorer(NPQ_Handler):
                 view_record[key] = Link.create(value, value)
             else:
                 view_record[key] = value
+        return view_record
 
     def get_node(self, node_id: str, prefix: str) -> Node:
         """

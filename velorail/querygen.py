@@ -105,18 +105,20 @@ class QueryGen:
         tracker = VarNameTracker()
         for i, record in enumerate(lod):
             prop = record["p"]
+            # do we have an injected wikidata_property?
+            wikidata_property=record.get("wikidata_property")
             prefixed_prop = self.get_prefixed_property(prop)
             base_var_name = self.sanitize_variable_name(prefixed_prop)
             var_name = tracker.get_unique_name(base_var_name)
             card = int(record.get("count", 1))
             comment = "" if i < first_x and card <= max_cardinality else "#"
-            properties[var_name] = (prop, prefixed_prop, card, comment)
+            properties[var_name] = (prop, prefixed_prop, card, comment,wikidata_property)
         for key, value in self.prefixes.items():
             sparql_query += f"\nPREFIX {key}: <{value}>"
 
         sparql_query += f"\nSELECT ?{main_var}"
 
-        for i, (var_name, (prop, prefixed_prop, card, comment)) in enumerate(
+        for i, (var_name, (prop, prefixed_prop, card, comment,wdp)) in enumerate(
             properties.items()
         ):
             if not (comment_out and comment):
@@ -127,11 +129,12 @@ class QueryGen:
         sparql_query += f"  VALUES (?{main_var}) {{ ({main_value}) }}\n"
         sparql_query += "  OPTIONAL {\n"
 
-        for i, (var_name, (prop, prefixed_prop, card, comment)) in enumerate(
+        for i, (var_name, (prop, prefixed_prop, card, comment,wdp)) in enumerate(
             properties.items()
         ):
             if not (comment_out and comment):
                 sparql_query += f"    # {prop}\n"
+                sparql_query += f"    # {wdp.plabel}\n"
                 sparql_query += (
                     f"    {comment}?{main_var} {prefixed_prop} ?{var_name} .\n"
                 )
