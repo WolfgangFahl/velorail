@@ -11,15 +11,13 @@ from pathlib import Path
 from lodstorage.query import EndpointManager, Query, QueryManager
 from lodstorage.sparql import SPARQL, Params
 
+
 class NPQ_Handler:
     """
     Handling of named parameterized queries
     """
 
-    def __init__(self,
-        yaml_file: str,
-        with_default: bool = False,
-        debug:bool=False):
+    def __init__(self, yaml_file: str, with_default: bool = False, debug: bool = False):
         """
         Constructor
 
@@ -29,7 +27,7 @@ class NPQ_Handler:
             debug(bool): if True switch on debug mode
         """
 
-        self.debug=debug
+        self.debug = debug
         self.endpoint_path = Path(__file__).parent / "resources" / "endpoints.yaml"
         self.query_path = Path(__file__).parent / "resources" / "queries"
         self.query_yaml = self.query_path / yaml_file
@@ -159,11 +157,11 @@ class NPQ_Handler:
 
         # Get the query string and handle prefixes
         sparql_query = query.query
-        lod=self.query(
+        lod = self.query(
             sparql_query=sparql_query,
             param_dict=param_dict,
             endpoint=endpoint,
-            auto_prefix=auto_prefix
+            auto_prefix=auto_prefix,
         )
         return lod
 
@@ -193,7 +191,7 @@ class NPQ_Handler:
         if auto_prefix:
             logging.debug(f"Auto prefixing for endpoint: {endpoint}")
             sparql_query = self.merge_prefixes_by_endpoint_name(sparql_query, endpoint)
-        msg=f"SPARQL query:\n{sparql_query}"
+        msg = f"SPARQL query:\n{sparql_query}"
         logging.debug(msg)
         if self.debug:
             print(msg)
@@ -203,7 +201,5 @@ class NPQ_Handler:
             print(final_query)
 
         # Execute query
-        lod = endpoint_instance.queryAsListOfDicts(
-            sparql_query,
-            param_dict=param_dict)
+        lod = endpoint_instance.queryAsListOfDicts(sparql_query, param_dict=param_dict)
         return lod

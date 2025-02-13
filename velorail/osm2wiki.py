@@ -3,10 +3,13 @@ import json
 import os
 from argparse import ArgumentParser, Namespace
 from typing import Dict, List
+
 from lodstorage.query_cmd import QueryCmd
-from velorail.tour import LegStyles
+
 from velorail.npq import NPQ_Handler
+from velorail.tour import LegStyles
 from velorail.wkt import WKT
+
 
 class Osm2WikiConverter:
     """
@@ -22,7 +25,7 @@ class Osm2WikiConverter:
         """
         self.args = args
         self.tmpdir = args.tmp
-        self.query_handler=NPQ_Handler("osmplanet.yaml",debug=args.debug)
+        self.query_handler = NPQ_Handler("osmplanet.yaml", debug=args.debug)
         self.leg_style = LegStyles.default()
         self.test = False
 
@@ -99,7 +102,12 @@ class Osm2WikiConverter:
         parser.add_argument(
             "--osm_items",
             nargs="*",
-            default=["relation/10492086", "relation/4220975","relation/1713826","node/11757382798"],
+            default=[
+                "relation/10492086",
+                "relation/4220975",
+                "relation/1713826",
+                "node/11757382798",
+            ],
             help="osm items to process [default: %(default)s]",
         )
         args = parser.parse_args()
@@ -116,13 +124,13 @@ class Osm2WikiConverter:
              Dict: The query results as list of dicts
         """
         if osm_item.startswith("relation"):
-            queryName="ItemNodesGeo"
-            id_key="relid"
-            osm_id=osm_item.replace("relation/","")
+            queryName = "ItemNodesGeo"
+            id_key = "relid"
+            osm_id = osm_item.replace("relation/", "")
         elif osm_item.startswith("node"):
-            queryName="NodeGeo"
-            id_key="osm_id"
-            osm_id=osm_item.replace("node/","")
+            queryName = "NodeGeo"
+            id_key = "osm_id"
+            osm_id = osm_item.replace("node/", "")
         else:
             raise ValueError(f"invalid osm_item {osm_item}")
 
@@ -138,11 +146,12 @@ class Osm2WikiConverter:
         if self.args.debug:
             print(f"Querying osm_item {osm_item}")
 
-        lod=self.query_handler.query_by_name(
+        lod = self.query_handler.query_by_name(
             query_name=queryName,
             param_dict=param_dict,
             endpoint=self.args.endpoint_name,
-            auto_prefix=True)
+            auto_prefix=True,
+        )
         return lod
 
     def to_mediawiki(self, osm_item: str, data: Dict) -> str:
@@ -166,11 +175,11 @@ https://www.openstreetmap.org/{osm_item}
 """
         # Add locations
         for item in data:
-            node=item["node"]
+            node = item["node"]
             node_id = node.split("/")[-1]
-            wkt=item["loc"]
-            latlon=WKT.wkt_to_latlon_str(wkt)
-            name=item.get("node_name", node_id)
+            wkt = item["loc"]
+            latlon = WKT.wkt_to_latlon_str(wkt)
+            name = item.get("node_name", node_id)
             loc = f"""{{{{Loc
 |id={node_id}
 |latlon={latlon}
@@ -211,7 +220,7 @@ https://www.openstreetmap.org/{osm_item}
              e.g. relation/<osm_id> or node/<osm_id>
         """
         for osm_item in osm_items:
-            base_name=osm_item.replace("/","_")
+            base_name = osm_item.replace("/", "_")
             json_file = os.path.join(self.tmpdir, f"osm_{base_name}.json")
             self.wiki_file = os.path.join(self.tmpdir, f"{base_name}.wiki")
 

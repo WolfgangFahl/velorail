@@ -37,7 +37,6 @@ class ExplorerView:
         self.node_id = None
         self.load_task = None
         self.timeout = 20.0  # seconds
-        self.wpm = self.solution.wpm
 
     async def get_selected_lod(self):
         """
@@ -63,9 +62,7 @@ class ExplorerView:
             prefixes = self.explorer.endpoint_prefixes.get(self.endpoint_name)
             query_gen = QueryGen(prefixes, debug=self.args.debug)
             sparql_query = query_gen.gen(
-                lod,
-                main_var="item",
-                main_value=f"{self.prefix}:{self.node_id}"
+                lod, main_var="item", main_value=f"{self.prefix}:{self.node_id}"
             )
             self.query_code.content = sparql_query
         except Exception as ex:
@@ -85,9 +82,7 @@ class ExplorerView:
 
             # Execute the query
             lod = self.explorer.query(
-                sparql_query=sparql_query,
-                param_dict={},
-                endpoint=self.endpoint_name
+                sparql_query=sparql_query, param_dict={}, endpoint=self.endpoint_name
             )
 
             # Ensure only one record is expected
@@ -98,11 +93,15 @@ class ExplorerView:
 
             if len(lod) > 1:
                 with self.result_row:
-                    ui.notify("Unexpected multiple results. Displaying first result only.")
+                    ui.notify(
+                        "Unexpected multiple results. Displaying first result only."
+                    )
 
             # Transform result into a single-row format for display
             record = lod[0]  # Expecting a single record
-            single_record_lod = [{"Property": key, "Value": value} for key, value in record.items()]
+            single_record_lod = [
+                {"Property": key, "Value": value} for key, value in record.items()
+            ]
             self.update_lod(single_record_lod, with_select=False)
 
         except Exception as ex:
@@ -159,10 +158,9 @@ WHERE {
         """
         update the node info
         """
-        info=f"{self.prefix}:{self.node_id} Endpoint: {self.endpoint_name}"
+        info = f"{self.prefix}:{self.node_id} Endpoint: {self.endpoint_name}"
         with self.header_row:
-            self.node_info.content=info
-
+            self.node_info.content = info
 
     def setup_ui(self):
         """Setup the basic UI container"""
@@ -170,9 +168,7 @@ WHERE {
             with splitter.before:
                 self.header_row = ui.row()
                 with self.header_row:
-                    self.node_info = ui.html(
-                        f""
-                    )
+                    self.node_info = ui.html(f"")
                     ui.button(
                         "Generate Query", icon="code", on_click=self.on_generate_query
                     )
@@ -241,34 +237,20 @@ WHERE {
         self.load_task = background_tasks.create(self.explore_node_task())
 
     def get_view_lod(self, lod: list) -> list:
-        """Convert records to view format with row numbers and links"""
+        """
+        Convert records to view format with row numbers and links
+        """
         view_lod = []
         self.dod = {}
         for i, record in enumerate(lod):
             index = i + 1
-            view_record = {"#": index}  # Number first
             # dict of dicts for lookup by index
             self.dod[index] = record
-            record_copy = record.copy()
-            for key, value in record_copy.items():
-                if isinstance(value, str) and value.startswith("http"):
-                    if "wikidata" in self.endpoint_name:
-                        if "www.wikidata.org/prop" in value:
-                            # Get property info if it's a Wikidata property
-                            pid = re.sub(r".*P(\d+).*", r"P\1", value)
-                            prop = self.wpm.get_property_by_id(pid)
-                            if prop:
-                                view_record[key] = Link.create(
-                                    prop.url, f"{prop.plabel} ({pid})"
-                                )
-                                continue
-                    view_record[key] = Link.create(value, value)
-                else:
-                    view_record[key] = value
+            view_record = self.explorer.get_view_record(record, index)
             view_lod.append(view_record)
         return view_lod
 
-    def update_lod(self, lod: list,with_select:bool=True):
+    def update_lod(self, lod: list, with_select: bool = True):
         """Update grid with list of dicts data"""
         view_lod = self.get_view_lod(lod)
         # Configure grid with checkbox selection
@@ -277,16 +259,14 @@ WHERE {
             editable=False,
             multiselect=True,
             with_buttons=True,
-            button_names=["all","fit"],
+            button_names=["all", "fit"],
             debug=False,
         )
 
         # Create or update grid
         if self.lod_grid is None:
             with self.result_row:
-                self.lod_grid = ListOfDictsGrid(
-                    lod=view_lod,
-                    config=grid_config)
+                self.lod_grid = ListOfDictsGrid(lod=view_lod, config=grid_config)
         else:
             with self.result_row:
                 self.lod_grid.load_lod(view_lod)

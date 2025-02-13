@@ -5,11 +5,14 @@ Created on 2025-02-04
 """
 
 import json
-from argparse import Namespace
 import os
+from argparse import Namespace
+
 from ngwidgets.basetest import Basetest
+
 from velorail.locfind import NPQ_Handler
 from velorail.osm2wiki import Osm2WikiConverter
+
 
 class TestOsm2wiki(Basetest):
     """
@@ -19,7 +22,9 @@ class TestOsm2wiki(Basetest):
     def setUp(self, debug=True, profile=True):
         Basetest.setUp(self, debug=debug, profile=profile)
         self.tmp_path = "/tmp"
-        self.query_handler = NPQ_Handler(yaml_file="osmplanet_explore.yaml",debug=self.debug)
+        self.query_handler = NPQ_Handler(
+            yaml_file="osmplanet_explore.yaml", debug=self.debug
+        )
         self.prefixes = {
             "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
             "geo": "http://www.opengis.net/ont/geosparql#",
@@ -52,9 +57,9 @@ class TestOsm2wiki(Basetest):
         """
         test the converter
         """
-        for osm_item,role,transport,loc_type in [
-            ("relation/1713826","member","bike","bike-waypoint"),
-            ("relation/10492086","stop","train","train station")
+        for osm_item, role, transport, loc_type in [
+            ("relation/1713826", "member", "bike", "bike-waypoint"),
+            ("relation/10492086", "stop", "train", "train station"),
         ]:
             args = Namespace(
                 debug=self.debug,
@@ -70,9 +75,7 @@ class TestOsm2wiki(Basetest):
                 role=role,
                 country="Spanien",
                 category="Spain2025",
-                osm_items=[
-                    osm_item
-                ],
+                osm_items=[osm_item],
                 queriesPath=None,
                 queryName="ItemNodesGeo",
             )

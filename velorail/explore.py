@@ -4,9 +4,13 @@ Created on 2025-02-06
 @author: wf
 """
 
+import re
 from dataclasses import dataclass
 from enum import Enum
 from typing import Optional
+
+from ez_wikidata.wdproperty import WikidataProperty, WikidataPropertyManager
+from ngwidgets.widgets import Link
 
 from velorail.npq import NPQ_Handler
 
@@ -50,6 +54,53 @@ class Explorer(NPQ_Handler):
         """
         super().__init__("sparql-explore.yaml")
         self.endpoint_name = endpoint_name
+        self.wpm = WikidataPropertyManager.get_instance()
+
+    def get_prop(self, value: str) -> WikidataProperty:
+        """
+        Get the WikidataProperty for the given value string - either from a URI or direct property id
+
+        Args:
+            value (str): The value to check - either a URI or direct property id
+
+        Returns:
+            WikidataProperty: The property if found else None
+        """
+        prop = None
+        if "wikidata" in self.endpoint_name and self.wpm:
+            prop_pattern = r"P(\d+)"
+            # Only try to extract pid if it's a property URI or matches P-number pattern
+            if "www.wikidata.org/prop" in value or re.match(prop_pattern, value):
+                pid = re.sub(f".*{prop_pattern}.*", r"P\1", value)
+                if pid:
+                    prop = self.wpm.get_property_by_id(pid)
+        return prop
+
+    def get_view_record(self, record: dict, index: int) -> dict:
+        """
+        get the view record for the given record
+
+        Args:
+            record (dict): The source record to convert
+            index (int): The row index
+
+        Returns:
+            dict: The view record with formatted links and properties
+        """
+        view_record = {"#": index}  # Number first
+        record_copy = record.copy()
+        for key, value in record_copy.items():
+            if isinstance(value, str):
+                prop = self.get_prop(value)
+                if prop:
+                    view_record[key] = Link.create(
+                        prop.url, f"{prop.plabel} ({prop.pid})"
+                    )
+                    continue
+            if value.startswith("http"):
+                view_record[key] = Link.create(value, value)
+            else:
+                view_record[key] = value
 
     def get_node(self, node_id: str, prefix: str) -> Node:
         """

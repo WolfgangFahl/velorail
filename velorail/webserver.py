@@ -225,7 +225,7 @@ class VeloRailWebServer(InputWebserver):
         """Constructs all the necessary attributes for the WebServer object."""
         InputWebserver.__init__(self, config=VeloRailWebServer.get_config())
 
-        # Get property manager instance
+        # Initialize property manager instance
         self.wpm = WikidataPropertyManager.get_instance()
 
         @ui.page("/explore/{node_id}")

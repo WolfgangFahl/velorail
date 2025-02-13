@@ -4,8 +4,9 @@ Created on 2025-02-01
 @author: wf
 """
 
-from shapely.wkt import loads
 from shapely.geometry import Point
+from shapely.wkt import loads
+
 
 class WKT:
     """

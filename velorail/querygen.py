@@ -4,6 +4,7 @@ Created on 2025-02-02
 @author: wf
 """
 
+
 class VarNameTracker:
     """
     Tracks variable names and ensures uniqueness by appending a suffix (_2, _3, etc.).
@@ -22,6 +23,7 @@ class VarNameTracker:
         else:
             self.var_name_count[base_name] = 1
             return base_name
+
 
 class QueryGen:
     """
@@ -60,7 +62,9 @@ class QueryGen:
         """
         longest_match = None
         for prefix, uri in self.prefixes.items():
-            if prop.startswith(uri) and (longest_match is None or len(uri) > len(longest_match)):
+            if prop.startswith(uri) and (
+                longest_match is None or len(uri) > len(longest_match)
+            ):
                 longest_match = uri
                 best_prefix = prefix
 
@@ -69,13 +73,15 @@ class QueryGen:
 
         return f"<{prop}>"
 
-
-    def gen(self, lod,
-            main_var: str,
-            main_value: str,
-            max_cardinality: int =None,
-            first_x: int = None,
-            comment_out: bool=False):
+    def gen(
+        self,
+        lod,
+        main_var: str,
+        main_value: str,
+        max_cardinality: int = None,
+        first_x: int = None,
+        comment_out: bool = False,
+    ):
         """
         Generates a SPARQL query dynamically based on the provided list of dictionaries (lod).
 
@@ -91,26 +97,28 @@ class QueryGen:
             str: The generated SPARQL query as a string.
         """
         if first_x is None:
-            first_x = 10**9 # a billion properties? should not happen
+            first_x = 10**9  # a billion properties? should not happen
         if max_cardinality is None:
-            max_cardinality=10**16 # how much energy for the RAM to keep this?
+            max_cardinality = 10**16  # how much energy for the RAM to keep this?
         sparql_query = "# generated Query"
         properties = {}
         tracker = VarNameTracker()
-        for i,record in enumerate(lod):
+        for i, record in enumerate(lod):
             prop = record["p"]
             prefixed_prop = self.get_prefixed_property(prop)
             base_var_name = self.sanitize_variable_name(prefixed_prop)
             var_name = tracker.get_unique_name(base_var_name)
-            card=int(record.get("count",1))
-            comment = "" if i < first_x and card<=max_cardinality else "#"
-            properties[var_name] = (prop, prefixed_prop,card,comment)
+            card = int(record.get("count", 1))
+            comment = "" if i < first_x and card <= max_cardinality else "#"
+            properties[var_name] = (prop, prefixed_prop, card, comment)
         for key, value in self.prefixes.items():
             sparql_query += f"\nPREFIX {key}: <{value}>"
 
         sparql_query += f"\nSELECT ?{main_var}"
 
-        for i, (var_name, (prop, prefixed_prop,card,comment)) in enumerate(properties.items()):
+        for i, (var_name, (prop, prefixed_prop, card, comment)) in enumerate(
+            properties.items()
+        ):
             if not (comment_out and comment):
                 sparql_query += f"\n  {comment}?{var_name}"
 
@@ -119,10 +127,14 @@ class QueryGen:
         sparql_query += f"  VALUES (?{main_var}) {{ ({main_value}) }}\n"
         sparql_query += "  OPTIONAL {\n"
 
-        for i, (var_name, (prop, prefixed_prop,card,comment)) in enumerate(properties.items()):
+        for i, (var_name, (prop, prefixed_prop, card, comment)) in enumerate(
+            properties.items()
+        ):
             if not (comment_out and comment):
                 sparql_query += f"    # {prop}\n"
-                sparql_query += f"    {comment}?{main_var} {prefixed_prop} ?{var_name} .\n"
+                sparql_query += (
+                    f"    {comment}?{main_var} {prefixed_prop} ?{var_name} .\n"
+                )
 
         sparql_query += "  }\n"  # Closing Optional clause
         sparql_query += "}"  # Closing WHERE clause

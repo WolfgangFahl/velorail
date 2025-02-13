@@ -5,8 +5,11 @@ Created on 2025-02-12
 """
 
 import unittest
-from velorail.wkt import WKT
+
 from ngwidgets.basetest import Basetest
+
+from velorail.wkt import WKT
+
 
 class TestWKT(Basetest):
     """
@@ -21,9 +24,18 @@ class TestWKT(Basetest):
         Test conversion of WKT to latlon or centroid
         """
         test_cases = [
-            ("POINT(-3.319103 42.542723)", {"coords": (42.542723, -3.319103), "expected": ("42.542", "-3.319")}),
-            ("LINESTRING(-3.319103 42.542723, -3.319200 42.543000, -3.318900 42.543100)", {"coords": (42.542941, -3.319067), "expected": ("42.542", "-3.319")}),
-            ("POLYGON((-3.319103 42.542723, -3.319200 42.543000, -3.318900 42.543100, -3.319103 42.542723))", {"coords": (42.542941, -3.319067), "expected": ("42.542", "-3.319")})
+            (
+                "POINT(-3.319103 42.542723)",
+                {"coords": (42.542723, -3.319103), "expected": ("42.542", "-3.319")},
+            ),
+            (
+                "LINESTRING(-3.319103 42.542723, -3.319200 42.543000, -3.318900 42.543100)",
+                {"coords": (42.542941, -3.319067), "expected": ("42.542", "-3.319")},
+            ),
+            (
+                "POLYGON((-3.319103 42.542723, -3.319200 42.543000, -3.318900 42.543100, -3.319103 42.542723))",
+                {"coords": (42.542941, -3.319067), "expected": ("42.542", "-3.319")},
+            ),
         ]
 
         for wkt, test_data in test_cases:

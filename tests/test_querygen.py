@@ -3,12 +3,15 @@ Created on 2025-02-09
 
 @author: wf
 """
+
 import json
+
 from ngwidgets.basetest import Basetest
 
 from velorail.explore import Explorer, TriplePos
-from velorail.querygen import QueryGen
 from velorail.npq import NPQ_Handler
+from velorail.querygen import QueryGen
+
 
 class TestQueryGen(Basetest):
     """
@@ -17,7 +20,9 @@ class TestQueryGen(Basetest):
 
     def setUp(self, debug=True, profile=True):
         Basetest.setUp(self, debug=debug, profile=profile)
-        self.query_handler = NPQ_Handler(yaml_file="osmplanet_explore.yaml",debug=self.debug)
+        self.query_handler = NPQ_Handler(
+            yaml_file="osmplanet_explore.yaml", debug=self.debug
+        )
 
         self.prefixes = {
             "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -50,12 +55,14 @@ class TestQueryGen(Basetest):
         query_gen = QueryGen(self.prefixes)
         relid = param_dict["relid"]
         value = f"osmrel:{relid}"
-        sparql_query = query_gen.gen(lod,
+        sparql_query = query_gen.gen(
+            lod,
             main_var="rel",
             main_value=value,
             first_x=9,
             max_cardinality=1,
-            comment_out=True)
+            comment_out=True,
+        )
 
         if self.debug:
             print("Generated SPARQL Query:")
@@ -98,10 +105,46 @@ class TestQueryGen(Basetest):
         """
         Test SPARQL query generation.
         """
-        for title,main_var,prefix,node_id, endpoint_name,first_x,comment_out,expected_keys in [
-            ("Vía Verde (Burgos - Túnel de La Engaña)","bike_route","osmrel","2172017","osm-qlever",1000,False, 24),
-            ("MD 18061","train_route","osmrel","10492086","osm-qlever",1000,False, 32),
-            ("Christian Ronaldo","person","wd","Q11571","wikidata-qlever",5,False, 1)
+        for (
+            title,
+            main_var,
+            prefix,
+            node_id,
+            endpoint_name,
+            first_x,
+            comment_out,
+            expected_keys,
+        ) in [
+            (
+                "Vía Verde (Burgos - Túnel de La Engaña)",
+                "bike_route",
+                "osmrel",
+                "2172017",
+                "osm-qlever",
+                1000,
+                False,
+                24,
+            ),
+            (
+                "MD 18061",
+                "train_route",
+                "osmrel",
+                "10492086",
+                "osm-qlever",
+                1000,
+                False,
+                32,
+            ),
+            (
+                "Christian Ronaldo",
+                "person",
+                "wd",
+                "Q11571",
+                "wikidata-qlever",
+                5,
+                False,
+                1,
+            ),
         ]:
             with self.subTest(node_id=node_id):
                 explorer = Explorer(endpoint_name)
@@ -117,19 +160,17 @@ class TestQueryGen(Basetest):
                     main_value=start_node.qualified_name,
                     max_cardinality=1,
                     first_x=first_x,
-                    comment_out=comment_out
+                    comment_out=comment_out,
                 )
                 if self.debug:
                     print(generated_query)
-                lod=explorer.query(
-                    sparql_query=generated_query,
-                    param_dict={},
-                    endpoint=endpoint_name
+                lod = explorer.query(
+                    sparql_query=generated_query, param_dict={}, endpoint=endpoint_name
                 )
                 # we expect a single but long record
-                self.assertEqual(len(lod),1)
-                record=lod[0]
+                self.assertEqual(len(lod), 1)
+                record = lod[0]
                 if self.debug:
                     print(title)
-                    print(json.dumps(record,indent=2,default=str))
-                self.assertEqual(len(record.keys()),expected_keys)
+                    print(json.dumps(record, indent=2, default=str))
+                self.assertEqual(len(record.keys()), expected_keys)
