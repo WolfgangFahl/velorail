@@ -97,8 +97,8 @@ class Explorer(NPQ_Handler):
                         prop.url, f"{prop.plabel} ({prop.pid})"
                     )
                     continue
-            if value.startswith("http"):
-                view_record[key] = Link.create(value, value)
+                if value.startswith("http"):
+                    view_record[key] = Link.create(value, value)
             else:
                 view_record[key] = value
         return view_record
