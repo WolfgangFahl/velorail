@@ -3,9 +3,6 @@ Created on 2025-02-12
 
 @author: wf
 """
-
-import unittest
-
 from ngwidgets.basetest import Basetest
 
 from velorail.wkt import WKT
@@ -38,14 +35,15 @@ class TestWKT(Basetest):
             ),
         ]
 
-        for wkt, test_data in test_cases:
-            with self.subTest(wkt=wkt):
-                lat, lon = WKT.wkt_to_latlon(wkt)
+        for wkt_str, test_data in test_cases:
+            with self.subTest(wkt_str=wkt_str):
+                wkt=WKT(wkt_str)
+                lat, lon =wkt.to_latlon()
                 e_lat, e_lon = test_data["coords"]
                 e_lat_str, e_lon_str = test_data["expected"]
                 self.assertAlmostEqual(lat, e_lat, places=4)
                 self.assertAlmostEqual(lon, e_lon, places=4)
-                latlon_str = WKT.wkt_to_latlon_str(wkt)
+                latlon_str = wkt.to_latlon_str()
                 if self.debug:
                     print(f"{latlon_str}")
                 self.assertTrue(e_lat_str in latlon_str)

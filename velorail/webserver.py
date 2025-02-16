@@ -10,13 +10,14 @@ import re
 from ez_wikidata.wdproperty import WikidataPropertyManager
 from ngwidgets.input_webserver import InputWebserver, InputWebSolution
 from ngwidgets.webserver import WebserverConfig
-from ngwidgets.widgets import Link
+from ngwidgets.widgets import Lang, Link
 from nicegui import Client, app, ui
 
 from velorail.explore import Explorer, TriplePos
 from velorail.explore_view import ExplorerView
 from velorail.gpxviewer import GPXViewer
 from velorail.locfind import LocFinder
+from velorail.sso_users_view import SsoAuth, SsoUsersView
 from velorail.version import Version
 from velorail.wditem_search import WikidataItemSearch
 
@@ -37,8 +38,10 @@ class VeloRailSolution(InputWebSolution):
         """
         super().__init__(webserver, client)  # Call to the superclass constructor
         self.args = self.webserver.args
+        self.lang = self.args.lang
         self.wpm = self.webserver.wpm
         self.viewer = GPXViewer(args=self.args)
+        self.sso_view = SsoUsersView(self, webserver.sso_auth)
 
     def clean_smw_artifacts(self, input_str: str) -> str:
         """
@@ -165,7 +168,14 @@ class VeloRailSolution(InputWebSolution):
         overrideable configuration
         """
         self.endpoint_name = self.args.endpointName
-        self.lang = "en"  # FIXME make configurable
+        self.sso_view.configure_menu()
+
+    def configure_settings(self):
+        """
+        configure settings
+        """
+        lang_dict = Lang.get_language_dict()
+        self.add_select("language:", lang_dict).bind_value(self, "lang")
 
     async def home(self):
         """
@@ -227,6 +237,9 @@ class VeloRailWebServer(InputWebserver):
 
         # Initialize property manager instance
         self.wpm = WikidataPropertyManager.get_instance()
+
+        # Initialize Single Signon Authentication
+        self.sso_auth = SsoAuth(self)
 
         @ui.page("/explore/{node_id}")
         async def explorer_page(

@@ -39,6 +39,9 @@ class VeloRailCmd(WebserverCmd):
             help=f"Name of the endpoint to use for queries. Available by default: {EndpointManager.getEndpointNames(lang='sparql')}",
         )
         parser.add_argument(
+            "--lang", type=str, default="en", help="Language for the UI (de or en)"
+        )
+        parser.add_argument(
             "-v",
             "--verbose",
             action="store_true",

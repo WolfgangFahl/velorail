@@ -4,7 +4,7 @@ Created on 2025-02-13
 @author: wf
 """
 
-from typing import List, Optional, Dict, Any
+from typing import Any, Dict, List, Optional
 
 from velorail.explore import Explorer, TriplePos
 from velorail.querygen import QueryGen
@@ -48,19 +48,23 @@ class KGWalker:
             prop_value = record_copy.get("p")
             prop = self.explorer.get_prop(prop_value)
             if (
-                    prop and
-                    prop.pid in selected_props and
-                    prop.pid not in seen_props and
-                    "/direct/" in prop_value
-                ):
+                prop
+                and prop.pid in selected_props
+                and prop.pid not in seen_props
+                and "/direct/" in prop_value
+            ):
                 if self.debug:
-                    print(f"selecting {prop} with type_name {prop.type_name} from {record}")
-                record_copy["wikidata_property"]=prop
+                    print(
+                        f"selecting {prop} with type_name {prop.type_name} from {record}"
+                    )
+                record_copy["wikidata_property"] = prop
                 gen_lod.append(record_copy)
                 seen_props.add(prop.pid)
         return gen_lod
 
-    def explore_and_query(self, prefix: str, node_id: str, selected_props: List[str]) -> List[Dict[str, Any]]:
+    def explore_and_query(
+        self, prefix: str, node_id: str, selected_props: List[str]
+    ) -> List[Dict[str, Any]]:
         """
         Explore the knowledge graph and generate/execute query from the given start node
 
@@ -96,7 +100,9 @@ class KGWalker:
         )
         return query_results
 
-    def create_view(self, query_results: List[Dict[str, Any]], depth: int = 1) -> Optional[Dict[str, Any]]:
+    def create_view(
+        self, query_results: List[Dict[str, Any]], depth: int = 1
+    ) -> Optional[Dict[str, Any]]:
         """
         Create a view record from query results
 
@@ -113,8 +119,14 @@ class KGWalker:
             view_record = self.explorer.get_view_record(record, depth)
         return view_record
 
-    def walk(self, prefix: str, node_id: str, selected_props: List[str],
-             create_view: bool = True, view_depth: int = 1) -> Optional[Dict[str, Any]]:
+    def walk(
+        self,
+        prefix: str,
+        node_id: str,
+        selected_props: List[str],
+        create_view: bool = True,
+        view_depth: int = 1,
+    ) -> Optional[Dict[str, Any]]:
         """
         Walk the knowledge graph from the given start node
 

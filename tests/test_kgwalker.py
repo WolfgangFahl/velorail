@@ -57,4 +57,4 @@ class TestKGWalker(Basetest):
             if self.debug:
                 print(msg)
             # FIXME - enable this test
-            #self.assertTrue(found, msg)
+            # self.assertTrue(found, msg)

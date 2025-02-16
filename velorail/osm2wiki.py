@@ -75,6 +75,12 @@ class Osm2WikiConverter:
             help="Maximum longitude (default: %(default)s)",
         )
         parser.add_argument(
+            "--min_node_distance",
+            type=float,
+            default=1000,
+            help="Minimum distance between nodes in m (default: 1000)",
+        )
+        parser.add_argument(
             "--role",
             default="stop",
             help="Member role to filter (default: %(default)s)",
@@ -154,6 +160,54 @@ class Osm2WikiConverter:
         )
         return lod
 
+    def compress_nodes(
+        self, nodes: List[Dict], min_distance_m: float = 1000
+    ) -> List[Dict]:
+        """
+        Compress nodes by removing ones that are too close together using haversine distance.
+
+        Args:
+            nodes: List of node data dicts
+            min_distance_m: Minimum distance between nodes in meters
+
+        Returns:
+            List[Dict]: Filtered node data
+        """
+        if not nodes or len(nodes) <= 2:
+            return nodes
+
+        compressed_nodes = []
+        last_lat, last_lon = None, None
+
+        for node in nodes:
+            wkt = node["wkt"]
+            points = wkt.to_latlon_list()  # Extract all points from LINESTRING
+
+            for lat, lon in points:
+                if (
+                    last_lat is None
+                    or WKT.distance(last_lat, last_lon, lat, lon) >= min_distance_m
+                ):
+                    # keep reference
+                    wkt.lat = lat
+                    wkt.lon = lon
+                    compressed_nodes.append(node)
+                    last_lat, last_lon = lat, lon  # Update last kept point
+                    break  # Move to the next node after selecting the first valid point
+
+        return compressed_nodes
+
+    def set_wkts(self, nodes: List[Dict]):
+        """
+        Convert loc entries to WKT instances for each node
+
+        Args:
+            nodes: List of node data dicts
+
+        """
+        for node in nodes:
+            node["wkt"] = WKT(node["loc"])
+
     def to_mediawiki(self, osm_item: str, data: Dict) -> str:
         """
         Convert relation data to MediaWiki format
@@ -177,8 +231,8 @@ https://www.openstreetmap.org/{osm_item}
         for item in data:
             node = item["node"]
             node_id = node.split("/")[-1]
-            wkt = item["loc"]
-            latlon = WKT.wkt_to_latlon_str(wkt)
+            wkt = item["wkt"]
+            latlon = wkt.to_latlon_str()
             name = item.get("node_name", node_id)
             loc = f"""{{{{Loc
 |id={node_id}
@@ -228,20 +282,28 @@ https://www.openstreetmap.org/{osm_item}
                 print(f"Processing osm item {osm_item}")
 
             # Query and save JSON
-            data = self.query_osm_item(osm_item)
+            q_data = self.query_osm_item(osm_item)
             if with_write:
                 with open(json_file, "w") as f:
-                    json.dump(data, f, indent=2)
+                    json.dump(q_data, f, indent=2)
+
+            self.set_wkts(q_data)
+            if self.args.min_node_distance:
+                c_data = self.compress_nodes(
+                    q_data, min_distance_m=self.args.min_node_distance
+                )
+            else:
+                c_data = q_data
 
             # Convert to wiki and save
-            wiki = self.to_mediawiki(osm_item, data)
+            wiki = self.to_mediawiki(osm_item, c_data)
             if with_write:
                 with open(self.wiki_file, "w") as f:
                     f.write(wiki)
 
             if not self.test:
                 print(f"Created {self.wiki_file}")
-        return data
+        return c_data
 
 
 def main():

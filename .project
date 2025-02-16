@@ -4,6 +4,7 @@
 	<comment></comment>
 	<projects>
 		<project>nicegui_widgets</project>
+		<project>py-3rdparty-mediawiki</project>
 		<project>pyLoDStorage</project>
 	</projects>
 	<buildSpec>

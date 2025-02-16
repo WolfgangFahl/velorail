@@ -53,13 +53,49 @@ class TestOsm2wiki(Basetest):
                 print(f"Query: {query_name}:")
                 print(json.dumps(lod, indent=2))
 
+    def testCompressNodes(self):
+        """
+        Test node compression with different scenarios.
+        """
+        # Create a straight line of points spaced 500m apart
+        points = [
+            {"loc": f"POINT(2.0 {42.0 + (i * 0.004491)})", "node": f"node/{i}"}
+            for i in range(10)
+        ]
+
+        args = Namespace(debug=True, tmp="/tmp")
+        converter = Osm2WikiConverter(args=args)
+
+        # Test cases: (input_points, min_distance_m, max_nodes, expected_count)
+        for i, (input_points, min_distance_m, expected_count) in enumerate(
+            [
+                (points, 1000, 4),  # 1km spacing keeps every other point + last point
+                (points, 2000, 2),  # 2km spacing keeps every fourth point + last point
+                (
+                    points,
+                    100,
+                    10,
+                ),  # max_nodes limits to 4 points (last point may not be included)
+                ([], 1000, 0),  # empty input
+                ([points[0]], 1000, 1),  # single point
+                (points[:2], 1000, 2),  # two points
+            ]
+        ):
+
+            converter.set_wkts(input_points)
+            compressed = converter.compress_nodes(
+                input_points, min_distance_m=min_distance_m
+            )
+            self.assertEqual(len(compressed), expected_count, f"case {i}")
+
     def testOsmRelConverter(self):
         """
         test the converter
         """
-        for osm_item, role, transport, loc_type in [
-            ("relation/1713826", "member", "bike", "bike-waypoint"),
-            ("relation/10492086", "stop", "train", "train station"),
+        for osm_item, role, transport, loc_type, expected_nodes, min_node_distance in [
+            ("relation/3421095", "member", "bike", "bike-waypoint", 30, 2000),
+            ("relation/1713826", "member", "bike", "bike-waypoint", 30, 2500),
+            ("relation/10492086", "stop", "train", "train station", 80, 8000),
         ]:
             args = Namespace(
                 debug=self.debug,
@@ -78,8 +114,8 @@ class TestOsm2wiki(Basetest):
                 osm_items=[osm_item],
                 queriesPath=None,
                 queryName="ItemNodesGeo",
+                min_node_distance=min_node_distance,
             )
-
             # Create converter instance
             converter = Osm2WikiConverter(args=args)
             converter.test = True
@@ -87,6 +123,7 @@ class TestOsm2wiki(Basetest):
             # Process the relations
             lod = converter.process_osm_items(args.osm_items)
             if self.debug:
-                print(f"{loc_type}:{osm_item}")
-                print(json.dumps(lod, indent=2))
+                print(f"{loc_type}:{osm_item} {len(lod)} nodes")
+                print(json.dumps(lod, indent=2, default=str))
+            self.assertTrue(len(lod) <= expected_nodes)
             self.assertTrue(os.path.exists(converter.wiki_file))
