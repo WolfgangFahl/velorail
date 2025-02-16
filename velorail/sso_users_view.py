@@ -37,7 +37,7 @@ class SsoAuth:
         """
         user = None
         username = self.login.get_username()
-        if username:
+        if username and self.users.is_available:
             user = self.users.sso.get_user(username)
         return user
 
