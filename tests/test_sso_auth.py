@@ -11,7 +11,7 @@ import yaml
 from ngwidgets.basetest import Basetest
 from wikibot3rd.sso import SSO, User
 from wikibot3rd.sso_users import Sso_Users
-from velorail.sso_users_view import SsoAuth
+from velorail.sso_users_solution import SsoSolution
 from unittest.mock import Mock, patch
 
 
@@ -50,6 +50,7 @@ class TestSsoAuth(Basetest):
                with_pool: bool = True,
                timeout: float = 3,
                debug: bool = False):
+            # set properties
             i_self.host = host
             i_self.database = database
             i_self.sql_port = sql_port
@@ -58,6 +59,7 @@ class TestSsoAuth(Basetest):
             i_self.with_pool = with_pool
             i_self.timeout = timeout
             i_self.debug = debug
+            # mock functions
             i_self.check_port = lambda: True
             i_self.get_user = lambda: self.mock_user
             i_self.check_credentials = lambda: True
@@ -68,7 +70,6 @@ class TestSsoAuth(Basetest):
                 logging.warn(msg)
             else:
                 logging.info(msg)
-            setattr(i_self, 'sso', self.mock_sso)
         if not webserver:
             if os.path.exists(self.test_dir):
                 shutil.rmtree(self.test_dir)
@@ -106,7 +107,7 @@ class TestSsoAuth(Basetest):
             # (which we absolutely must avoid in the test environment!
             self.mock_sso = Mock(spec=SSO)
             with patch.object(SSO, "__init__", mocked_SSO_constructor):
-                self.sso_auth = SsoAuth(webserver, credentials_path=self.credentials_path)
+                self.sso_auth = SsoSolution(webserver, credentials_path=self.credentials_path)
                 self.sso_auth.users = Sso_Users(solution_name="test", debug=self.debug, credentials_path=self.credentials_path)
 
     def test_get_user_display_name(self):

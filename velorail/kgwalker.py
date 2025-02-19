@@ -12,7 +12,8 @@ from velorail.querygen import QueryGen
 
 class KGWalker:
     """
-    Knowledge Graph walker that combines exploration, query generation and result viewing
+    Knowledge Graph walker that combines exploration, 
+    query generation and result viewing
     """
 
     def __init__(self, endpoint_name: str, debug: bool = False):

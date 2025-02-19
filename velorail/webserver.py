@@ -17,7 +17,7 @@ from velorail.explore import Explorer, TriplePos
 from velorail.explore_view import ExplorerView
 from velorail.gpxviewer import GPXViewer
 from velorail.locfind import LocFinder
-from velorail.sso_users_view import SsoAuth, SsoUsersView
+from velorail.sso_users_solution import SsoSolution
 from velorail.version import Version
 from velorail.wditem_search import WikidataItemSearch
 
@@ -41,7 +41,14 @@ class VeloRailSolution(InputWebSolution):
         self.lang = self.args.lang
         self.wpm = self.webserver.wpm
         self.viewer = GPXViewer(args=self.args)
-        self.sso_view = SsoUsersView(self, webserver.sso_auth)
+
+    def configure_menu(self):
+        """
+        configure my menu
+        """
+        InputWebSolution.configure_menu(self)
+        self.sso_solution = SsoSolution(webserver=self.webserver)
+        self.sso_solution.configure_menu()
 
     def clean_smw_artifacts(self, input_str: str) -> str:
         """
@@ -168,7 +175,6 @@ class VeloRailSolution(InputWebSolution):
         overrideable configuration
         """
         self.endpoint_name = self.args.endpointName
-        self.sso_view.configure_menu()
 
     def configure_settings(self):
         """
@@ -237,9 +243,6 @@ class VeloRailWebServer(InputWebserver):
 
         # Initialize property manager instance
         self.wpm = WikidataPropertyManager.get_instance()
-
-        # Initialize Single Signon Authentication
-        self.sso_auth = SsoAuth(self)
 
         @ui.page("/explore/{node_id}")
         async def explorer_page(
