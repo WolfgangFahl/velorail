@@ -26,6 +26,7 @@ class SsoSolution(WebSolution):
         """
         super().__init__(webserver, client)  # Call parent constructor with both required parameters
         self.users = Sso_Users(webserver.config.short_name, credentials_path=credentials_path)
+
         self.login = Login(webserver, self.users)
 
     def get_user(self) -> User:
