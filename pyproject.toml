@@ -17,7 +17,7 @@ readme = "README.md"
 license= "Apache-2.0"
 dependencies = [
 	# https://github.com/WolfgangFahl/velorail
-    "ngwidgets>=0.22.0",
+    "ngwidgets>=0.22.2",
     # https://pypi.org/project/pyLodStorage/
 	"pyLodStorage>=0.14.2",
     "pandas",

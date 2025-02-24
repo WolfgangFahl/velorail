@@ -35,27 +35,15 @@ class ExplorerView:
         self.load_task = None
         self.timeout = 20.0  # seconds
 
-    async def get_selected_lod(self):
-        """
-        selected rows are in view (e.g.  html) format
-        get back the original list of dict rows
-        """
-        lod = []
-        selected_rows = await self.lod_grid.get_selected_rows()
-        if not selected_rows:
-            with self.result_row:
-                ui.notify("Please select at least one row")
-        else:
-            for row in selected_rows:
-                index = row["#"]
-                record = self.dod[index]
-                lod.append(record)
-        return lod
-
     async def on_generate_query(self):
         """Handle query generation from selected rows"""
         try:
-            lod = await self.get_selected_lod()
+            lod_index=self.lod_grid.get_index(lenient=self.lod_grid.config.lenient,lod=self.lod)
+            lod = await self.lod_grid.get_selected_lod(lod_index=lod_index)
+            if len(lod)==0:
+                with self.result_row:
+                    ui.notify("Please select at least one row")
+                    return
             prefixes = self.explorer.endpoint_prefixes.get(self.endpoint_name)
             query_gen = QueryGen(prefixes, debug=self.args.debug)
             sparql_query = query_gen.gen(
@@ -238,17 +226,15 @@ WHERE {
         Convert records to view format with row numbers and links
         """
         view_lod = []
-        self.dod = {}
         for i, record in enumerate(lod):
             index = i + 1
-            # dict of dicts for lookup by index
-            self.dod[index] = record
             view_record = self.explorer.get_view_record(record, index)
             view_lod.append(view_record)
         return view_lod
 
     def update_lod(self, lod: list, with_select: bool = True):
         """Update grid with list of dicts data"""
+        self.lod=lod
         view_lod = self.get_view_lod(lod)
         # Configure grid with checkbox selection
         grid_config = GridConfig(

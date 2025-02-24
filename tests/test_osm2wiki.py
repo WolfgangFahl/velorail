@@ -93,9 +93,10 @@ class TestOsm2wiki(Basetest):
         test the converter
         """
         for osm_item, role, transport, loc_type, expected_nodes, min_node_distance in [
-            ("relation/3421095", "member", "bike", "bike-waypoint", 30, 2000),
-            ("relation/1713826", "member", "bike", "bike-waypoint", 30, 2500),
-            ("relation/10492086", "stop", "train", "train station", 80, 8000),
+            ("relation/18343947", "member", "train", "train station",  53, 6000),
+            ("relation/3421095" , "member", "bike",  "bike-waypoint",  30, 2000),
+            ("relation/1713826" , "member", "bike",  "bike-waypoint",  30, 2500),
+            ("relation/10492086", "stop"  , "train", "train station",  80, 8000),
         ]:
             args = Namespace(
                 debug=self.debug,
@@ -125,5 +126,6 @@ class TestOsm2wiki(Basetest):
             if self.debug:
                 print(f"{loc_type}:{osm_item} {len(lod)} nodes")
                 print(json.dumps(lod, indent=2, default=str))
-            self.assertTrue(len(lod) <= expected_nodes)
+            node_count=len(lod)
+            self.assertTrue(node_count <= expected_nodes,node_count)
             self.assertTrue(os.path.exists(converter.wiki_file))
