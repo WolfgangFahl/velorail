@@ -6,10 +6,11 @@ Created on 2025-06-02
 
 from ngwidgets.lod_grid import GridConfig, ListOfDictsGrid
 from ngwidgets.webserver import WebSolution
-from nicegui import background_tasks, ui
+from nicegui import ui
 
 from velorail.explore import Explorer, TriplePos
 from velorail.querygen import QueryGen
+from ngwidgets.task_runner import TaskRunner
 
 
 class ExplorerView:
@@ -32,8 +33,8 @@ class ExplorerView:
         self.result_row = None
         self.lod_grid = None
         self.node_id = None
-        self.load_task = None
-        self.timeout = 20.0  # seconds
+        self.task_runner=TaskRunner()
+
 
     async def on_generate_query(self):
         """Handle query generation from selected rows"""
@@ -170,7 +171,7 @@ WHERE {
         """Show exploration results for a given node ID"""
         self.node_id = node_id
         self.update_node_info()
-        self.run_exploration()
+        self.task_runner.run(self.explore_node_task)
 
     async def explore_node_task(self):
         """Background task for node exploration"""
@@ -204,22 +205,6 @@ WHERE {
             self.solution.handle_exception(ex)
             with self.solution.container:
                 ui.notify(f"Exploration failed: {str(ex)}")
-
-    def run_exploration(self):
-        """Run the exploration with proper task management"""
-
-        def cancel_running():
-            if self.load_task:
-                self.load_task.cancel()
-
-        # Cancel any running task
-        cancel_running()
-
-        # Set timeout
-        ui.timer(self.timeout, lambda: cancel_running(), once=True)
-
-        # Run new task in background
-        self.load_task = background_tasks.create(self.explore_node_task())
 
     def get_view_lod(self, lod: list) -> list:
         """
