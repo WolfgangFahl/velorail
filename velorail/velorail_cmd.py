@@ -42,12 +42,6 @@ class VeloRailCmd(WebserverCmd):
             "--lang", type=str, default="en", help="Language for the UI (de or en)"
         )
         parser.add_argument(
-            "-v",
-            "--verbose",
-            action="store_true",
-            help="show verbose output [default: %(default)s]",
-        )
-        parser.add_argument(
             "-rp",
             "--root_path",
             default=VeloRailWebServer.examples_path(),
