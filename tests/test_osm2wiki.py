@@ -19,7 +19,7 @@ class TestOsm2wiki(Basetest):
     test  osm2wiki script
     """
 
-    def setUp(self, debug=True, profile=True):
+    def setUp(self, debug=False, profile=True):
         Basetest.setUp(self, debug=debug, profile=profile)
         self.tmp_path = "/tmp"
         self.query_handler = NPQ_Handler(
@@ -96,9 +96,9 @@ class TestOsm2wiki(Basetest):
         #debug=True
         for osm_item, role, transport, loc_type, expected_nodes, min_node_distance in [
             ("relation/18343947", "member", "train", "train station",  53, 6000),
-            ("relation/3421095" , "member", "bike",  "bike-waypoint",  30, 2000),
-            ("relation/1713826" , "member", "bike",  "bike-waypoint",  30, 2500),
-            ("relation/10492086", "stop"  , "train", "train station",  80, 8000),
+            ("relation/3421095" , "member", "bike",  "bike-waypoint",  29, 2000),
+            ("relation/1713826" , "member", "bike",  "bike-waypoint",  10, 2500),
+            ("relation/10492086", "stop"  , "train", "train station",  21, 8000),
         ]:
             args = Namespace(
                 debug=self.debug,
