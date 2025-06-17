@@ -8,7 +8,7 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
-from lodstorage.yamlable import lod_storable
+from basemkit.yamlable import lod_storable
 from ngwidgets.widgets import Link
 
 from velorail.npq import NPQ_Handler

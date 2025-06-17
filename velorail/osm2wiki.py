@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import json
 import os
+import dataclasses
 from argparse import ArgumentParser, Namespace
 from typing import Dict, List
 
@@ -164,7 +165,8 @@ class Osm2WikiConverter:
         self, nodes: List[Dict], min_distance_m: float = 1000
     ) -> List[Dict]:
         """
-        Compress nodes by removing ones that are too close together using haversine distance.
+        Compress nodes by removing ones
+        that are too close together using haversine distance.
 
         Args:
             nodes: List of node data dicts
@@ -180,7 +182,9 @@ class Osm2WikiConverter:
         last_lat, last_lon = None, None
 
         for node in nodes:
-            wkt = node["wkt"]
+            wkt_node=node["wkt"]
+            # get a copy
+            wkt=dataclasses.replace(wkt_node)
             points = wkt.to_latlon_list()  # Extract all points from LINESTRING
 
             for lat, lon in points:
