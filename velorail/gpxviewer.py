@@ -56,14 +56,20 @@ class GPXViewer:
             self.zoom = GPXViewer.default_zoom
             self.center = GPXViewer.default_center
 
+
     def load_gpx(self, gpx_url: str):
         """
-        load the given gpx file
+        Load the given GPX file from URL and parse it.
         """
-        response = requests.get(gpx_url)
-        self.gpx = gpxpy.parse(response.text)
-        self.get_points(self.gpx)
-        return self.gpx
+        try:
+            response = requests.get(gpx_url, timeout=10)
+            response.raise_for_status()
+            self.gpx = gpxpy.parse(response.text)
+            self.get_points(self.gpx)
+            return self.gpx
+        except (requests.RequestException, gpxpy.gpx.GPXXMLSyntaxException) as e:
+            raise RuntimeError(f"Failed to load GPX from {gpx_url}: {e}")
+
 
     def set_center(self):
         """

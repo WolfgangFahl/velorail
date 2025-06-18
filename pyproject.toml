@@ -27,7 +27,7 @@ dependencies = [
     "pandas",
     "numpy",
     # https://pypi.org/project/py-ez-wikidata/
-	"py-ez-wikidata>=0.2.3",
+	"py-ez-wikidata>=0.3.1",
 	# shapely
 	# https://github.com/shapely/shapely
 	"shapely>=2.0.7",
