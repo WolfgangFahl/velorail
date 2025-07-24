@@ -17,7 +17,7 @@ from velorail.explore import Explorer, TriplePos
 from velorail.explore_view import ExplorerView
 from velorail.gpxviewer import GPXViewer
 from velorail.locfind import LocFinder
-from velorail.sso_users_solution import SsoSolution
+from ngwidgets.sso_users_solution import SsoSolution
 from velorail.version import Version
 from velorail.wditem_search import WikidataItemSearch
 
