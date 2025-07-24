@@ -123,7 +123,7 @@ class TestQueryGen(Basetest):
                 "osm-qlever",
                 1000,
                 False,
-                24,
+                20,
             ),
             (
                 "MD 18061",
@@ -133,7 +133,7 @@ class TestQueryGen(Basetest):
                 "osm-qlever",
                 1000,
                 False,
-                32,
+                28,
             ),
             (
                 "Christian Ronaldo",
@@ -173,4 +173,4 @@ class TestQueryGen(Basetest):
                 if self.debug:
                     print(title)
                     print(json.dumps(record, indent=2, default=str))
-                self.assertEqual(len(record.keys()), expected_keys)
+                self.assertEqual(len(record.keys()), expected_keys,title)

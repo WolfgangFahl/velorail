@@ -184,7 +184,8 @@ class NPQ_Handler:
         Returns:
             list: List of dictionaries with query results.
         """
-
+        if endpoint not in self.endpoints:
+            raise Exception(f"invalid endpoint {endpoint}")
         sparql_endpoint = self.endpoints[endpoint]
         endpoint_instance = SPARQL(sparql_endpoint.endpoint)
 
