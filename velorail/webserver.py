@@ -20,6 +20,7 @@ from velorail.locfind import LocFinder
 from ngwidgets.sso_users_solution import SsoSolution
 from velorail.version import Version
 from velorail.wditem_search import WikidataItemSearch
+from ngwidgets.task_runner import TaskRunner
 
 
 class VeloRailSolution(InputWebSolution):
@@ -41,6 +42,7 @@ class VeloRailSolution(InputWebSolution):
         self.lang = self.args.lang
         self.wpm = self.webserver.wpm
         self.viewer = GPXViewer(args=self.args)
+        self.task_runner=TaskRunner()
 
     def configure_menu(self):
         """
@@ -69,7 +71,6 @@ class VeloRailSolution(InputWebSolution):
         Args:
             qid(str): the Wikidata id of the item to analyze
         """
-
         def show():
             viewer = self.viewer
             # Create LocFinder and get coordinates
