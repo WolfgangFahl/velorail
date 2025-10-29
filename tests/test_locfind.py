@@ -24,6 +24,7 @@ class TestLocFinder(Basetest):
         test finding location of a wikidata item
         """
         locfinder = LocFinder()
+        locfinder.debug=self.debug
         # Test with Gare de Biarritz (Q1959795)
         qid = "Q1959795"
         expected = {

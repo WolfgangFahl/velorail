@@ -192,7 +192,7 @@ class NPQ_Handler:
         if auto_prefix:
             logging.debug(f"Auto prefixing for endpoint: {endpoint}")
             sparql_query = self.merge_prefixes_by_endpoint_name(sparql_query, endpoint)
-        msg = f"SPARQL query:\n{sparql_query}"
+        msg = f"SPARQL query for {endpoint}:\n{sparql_query}"
         logging.debug(msg)
         if self.debug:
             print(msg)
