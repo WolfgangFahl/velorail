@@ -1,4 +1,5 @@
 # SPARQL endpoints for velorail
+# WF 2025-10-29
 endpoints:
     'osm-sophox':
         endpoint: https://sophox.org/sparql
@@ -12,8 +13,8 @@ endpoints:
           PREFIX osmm: <https://www.openstreetmap.org/meta/>
           PREFIX geo: <http://www.opengis.net/ont/geosparql#>
     'osm-qlever':
-        endpoint: https://qlever.cs.uni-freiburg.de/api/osm-planet
-        website: https://qlever.cs.uni-freiburg.de/osm-planet
+        endpoint: https://qlever.dev/api/osm-planet
+        website:  https://qlever.dev/osm-planet
         database: qlever
         method: POST
         lang: sparql
@@ -35,8 +36,8 @@ endpoints:
         lang: sparql
         method: POST
         database: qlever
-        endpoint: https://qlever.cs.uni-freiburg.de/api/wikidata
-        website: https://qlever.cs.uni-freiburg.de/wikidata
+        endpoint: https://qlever.dev/api/wikidata
+        website: https://qlever.dev/wikidata
         prefixes: |
             PREFIX biopax: <http://www.biopax.org/release/biopax-level3.owl#>
             PREFIX bd: <http://www.bigdata.com/rdf#>
