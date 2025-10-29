@@ -32,7 +32,7 @@ dependencies = [
 	# https://github.com/shapely/shapely
 	"shapely>=2.0.7",
 	# https://pypi.org/project/py-3rdparty-mediawiki/
-	"py-3rdparty-mediawiki>=0.18.0",
+	"py-3rdparty-mediawiki>=0.17.0",
  ]
 
 requires-python = ">=3.9"
