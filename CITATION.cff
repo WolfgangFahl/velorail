@@ -1,8 +1,6 @@
 # CITATION.cff for https://github.com/WolfgangFahl/velorail
 # This CITATION.cff file was initially generated with cffinit.
 # Visit https://bit.ly/cffinit to generate yours today!
-# Note: Zenodo GitHub integration is enabled; the concept DOI will be
-# added here once the first post-integration release has been archived.
 cff-version: 1.2.0
 title: velorail
 message: >-
@@ -17,6 +15,10 @@ authors:
   - given-names: Tim
     family-names: Holzheim
     orcid: 'https://orcid.org/0000-0003-2533-6363'
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.21722377
+    description: Concept DOI (all versions) on Zenodo
 repository-code: 'https://github.com/WolfgangFahl/velorail'
 abstract: >-
   Multimodal route planning with a focus on bike and train
