@@ -28,3 +28,8 @@ For a specific release, use the version DOI shown on the corresponding
 
 # Documentation
 [wiki](https://wiki.bitplan.com/index.php/Velorail)
+
+# Presentations
+* [Wikimedia Hackathon 2025 - Istanbul, Turkey - Closing Showcase](https://youtu.be/rz5r8dCeC2M?t=4952)
+
+[![Wikimedia Hackathon 2025 closing showcase video](images/wmhack2025_closing_showcase.png)](https://youtu.be/rz5r8dCeC2M?t=4952)
