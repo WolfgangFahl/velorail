@@ -87,6 +87,28 @@ endpoints:
             PREFIX wp: <http://vocabularies.wikipathways.org/wp#>
             PREFIX wprdf: <http://rdf.wikipathways.org/>
             PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
+    'wikidata-qlever-dbis':
+        lang: sparql
+        method: POST
+        database: qlever
+        endpoint: https://qlever-api.wikidata.dbis.rwth-aachen.de/
+        website: https://qlever.wikidata.dbis.rwth-aachen.de/wikidata
+        calls_per_minute: 60
+        prefixes: |
+            PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+            PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+            PREFIX p: <http://www.wikidata.org/prop/>
+            PREFIX pq: <http://www.wikidata.org/prop/qualifier/>
+            PREFIX ps: <http://www.wikidata.org/prop/statement/>
+            PREFIX psv: <http://www.wikidata.org/prop/statement/value/>
+            PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+            PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+            PREFIX schema: <http://schema.org/>
+            PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+            PREFIX wd: <http://www.wikidata.org/entity/>
+            PREFIX wdt: <http://www.wikidata.org/prop/direct/>
+            PREFIX wikibase: <http://wikiba.se/ontology#>
+            PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
     'wikidata':
       lang: sparql
       endpoint: https://query.wikidata.org/sparql

@@ -17,6 +17,13 @@ class NPQ_Handler:
     Handling of named parameterized queries
     """
 
+    # endpoints to try when the primary endpoint does not answer
+    # the RWTH Aachen qlever node carries wikidata but no OpenStreetMap data
+    fallbacks = {
+        "wikidata-qlever": ["wikidata-qlever-dbis", "wikidata"],
+        "wikidata-qlever-dbis": ["wikidata-qlever", "wikidata"],
+    }
+
     def __init__(self, yaml_file: str, with_default: bool = False, debug: bool = False):
         """
         Constructor
@@ -165,6 +172,22 @@ class NPQ_Handler:
         )
         return lod
 
+    def endpoint_chain(self, endpoint: str) -> list:
+        """
+        Get the endpoints to try for the given endpoint name.
+
+        Args:
+            endpoint (str): Name of the endpoint to use.
+
+        Returns:
+            list: the endpoint name followed by its fallbacks
+        """
+        chain = [endpoint]
+        for fallback in self.fallbacks.get(endpoint, []):
+            if fallback in self.endpoints:
+                chain.append(fallback)
+        return chain
+
     def query(
         self,
         sparql_query: str,
@@ -173,7 +196,48 @@ class NPQ_Handler:
         auto_prefix: bool = True,
     ):
         """
-        Get the result of the given query.
+        Get the result of the given query trying the fallback endpoints
+        of the given endpoint until one of them answers.
+
+        Args:
+            sparql_query (str): the query to execute.
+            param_dict (dict): Dictionary of parameters to substitute.
+            endpoint (str): Name of the endpoint to use.
+            auto_prefix (bool): Whether to automatically add endpoint prefixes.
+
+        Returns:
+            list: List of dictionaries with query results.
+
+        Raises:
+            RuntimeError: if none of the endpoints of the chain answers
+        """
+        lod = None
+        failures = []
+        for endpoint_name in self.endpoint_chain(endpoint):
+            try:
+                lod = self.query_endpoint(
+                    sparql_query=sparql_query,
+                    param_dict=param_dict,
+                    endpoint=endpoint_name,
+                    auto_prefix=auto_prefix,
+                )
+                break
+            except Exception as ex:
+                failures.append(f"{endpoint_name}: {ex}")
+                logging.warning(f"endpoint {endpoint_name} failed: {ex}")
+        if lod is None:
+            raise RuntimeError(f"all endpoints failed - {'; '.join(failures)}")
+        return lod
+
+    def query_endpoint(
+        self,
+        sparql_query: str,
+        param_dict: dict = {},
+        endpoint: str = "wikidata-qlever",
+        auto_prefix: bool = True,
+    ):
+        """
+        Get the result of the given query from the given endpoint.
 
         Args:
             sparql_query (str): the query to execute.
