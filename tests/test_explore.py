@@ -28,6 +28,9 @@ class TestExplorer(Basetest):
         """
         Test explorer with different endpoints and examples
         """
+        # qlever.dev answers 403 to the GitHub runners
+        if Basetest.inPublicCI():
+            return
         # Define test cases for different endpoints
         endpoint_tests = {
             "osm": {

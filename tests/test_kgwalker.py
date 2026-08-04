@@ -23,6 +23,9 @@ class TestKGWalker(Basetest):
         """
         Test exploring Madeira airport looking for specific property labels
         """
+        # qlever.dev answers 403 to the GitHub runners
+        if Basetest.inPublicCI():
+            return
         test_cases = [
             ("named after", "P138"),  # entity that inspired the name
             ("OpenStreetMap way ID", "P10689"),  # identifier for OSM way

@@ -43,6 +43,9 @@ class TestOsm2wiki(Basetest):
         """
         test queries to explore correct OSM Planet SPAQRL queries
         """
+        # qlever.dev answers 403 to the GitHub runners
+        if Basetest.inPublicCI():
+            return
         for query_name in ["Relation1", "RelationExplore"]:
             lod = self.query_handler.query_by_name(
                 query_name=query_name,
@@ -92,6 +95,9 @@ class TestOsm2wiki(Basetest):
         """
         test the converter
         """
+        # qlever.dev answers 403 to the GitHub runners
+        if Basetest.inPublicCI():
+            return
         debug = self.debug
         # debug=True
         for osm_item, role, transport, loc_type, expected_nodes, min_node_distance in [

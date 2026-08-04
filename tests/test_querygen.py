@@ -42,6 +42,9 @@ class TestQueryGen(Basetest):
         """
         test generating a query
         """
+        # qlever.dev answers 403 to the GitHub runners
+        if Basetest.inPublicCI():
+            return
         query_name = "RelationExplore"
         param_dict = {"relid": "10492086"}
         endpoint = "osm-qlever"
@@ -105,6 +108,9 @@ class TestQueryGen(Basetest):
         """
         Test SPARQL query generation.
         """
+        # qlever.dev answers 403 to the GitHub runners
+        if Basetest.inPublicCI():
+            return
         for (
             title,
             main_var,
