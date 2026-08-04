@@ -18,7 +18,7 @@ class Version:
     name = "velorail"
     version = velorail.__version__
     date = "2025-02-01"
-    updated = "2025-10-28"
+    updated = "2026-08-04"
     description = "Multimodal bike and train route planning support"
 
     authors = "Wolfgang Fahl"

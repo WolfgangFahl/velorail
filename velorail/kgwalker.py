@@ -12,7 +12,7 @@ from velorail.querygen import QueryGen
 
 class KGWalker:
     """
-    Knowledge Graph walker that combines exploration, 
+    Knowledge Graph walker that combines exploration,
     query generation and result viewing
     """
 

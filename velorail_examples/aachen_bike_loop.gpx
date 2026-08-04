@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="velorail" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Aachen bike loop</name>
+    <desc>Small example loop through the Aachen city center</desc>
+  </metadata>
+  <trk>
+    <name>Aachen city loop</name>
+    <trkseg>
+      <trkpt lat="50.7753" lon="6.0839"><name>Elisenbrunnen</name></trkpt>
+      <trkpt lat="50.7776" lon="6.0836"><name>Dom</name></trkpt>
+      <trkpt lat="50.7802" lon="6.0913"><name>Ludwigsallee</name></trkpt>
+      <trkpt lat="50.7815" lon="6.1006"><name>Europaplatz</name></trkpt>
+      <trkpt lat="50.7679" lon="6.0912"><name>Hauptbahnhof</name></trkpt>
+      <trkpt lat="50.7753" lon="6.0839"><name>Elisenbrunnen</name></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

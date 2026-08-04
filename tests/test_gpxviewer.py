@@ -4,6 +4,8 @@ Created on 2025-01-17
 @author: wf
 """
 
+from pathlib import Path
+
 from ngwidgets.basetest import Basetest
 
 from velorail.gpxviewer import GPXViewer
@@ -16,6 +18,26 @@ class TestGPXViewer(Basetest):
 
     def setUp(self, debug=True, profile=True):
         Basetest.setUp(self, debug=debug, profile=profile)
+        self.examples_path = Path(__file__).parent.parent / "velorail_examples"
+
+    def gpx_source(self, gpx_url: str) -> str:
+        """
+        Get the source to load the given sample url from.
+
+        A sample that is shipped in velorail_examples is loaded from there
+        so that the test does not depend on the file being published.
+
+        Args:
+            gpx_url: the url of the sample
+
+        Returns:
+            str: the local path of the shipped example or the url
+        """
+        source = gpx_url
+        example_path = self.examples_path / gpx_url.split("/")[-1]
+        if example_path.is_file():
+            source = str(example_path)
+        return source
 
     def test_gpx_viewer(self):
         """
@@ -35,7 +57,7 @@ class TestGPXViewer(Basetest):
         for sample_name, gpx_url in GPXViewer.samples.items():
             with self.subTest(sample_name=sample_name):
                 # Create viewer instance and load GPX file
-                viewer = GPXViewer.from_url(gpx_url)
+                viewer = GPXViewer.from_url(self.gpx_source(gpx_url))
 
                 viewer.set_center()
 

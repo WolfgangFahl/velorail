@@ -1,7 +1,7 @@
 #!/usr/bin/env python
+import dataclasses
 import json
 import os
-import dataclasses
 from argparse import ArgumentParser, Namespace
 from typing import Dict, List
 
@@ -182,9 +182,9 @@ class Osm2WikiConverter:
         last_lat, last_lon = None, None
 
         for node in nodes:
-            wkt_node=node["wkt"]
+            wkt_node = node["wkt"]
             # get a copy
-            wkt=dataclasses.replace(wkt_node)
+            wkt = dataclasses.replace(wkt_node)
             points = wkt.to_latlon_list()  # Extract all points from LINESTRING
 
             for lat, lon in points:

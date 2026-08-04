@@ -5,12 +5,12 @@ Created on 2025-06-02
 """
 
 from ngwidgets.lod_grid import GridConfig, ListOfDictsGrid
+from ngwidgets.task_runner import TaskRunner
 from ngwidgets.webserver import WebSolution
 from nicegui import ui
 
 from velorail.explore import Explorer, TriplePos
 from velorail.querygen import QueryGen
-from ngwidgets.task_runner import TaskRunner
 
 
 class ExplorerView:
@@ -33,15 +33,16 @@ class ExplorerView:
         self.result_row = None
         self.lod_grid = None
         self.node_id = None
-        self.task_runner=TaskRunner()
-
+        self.task_runner = TaskRunner()
 
     async def on_generate_query(self):
         """Handle query generation from selected rows"""
         try:
-            lod_index=self.lod_grid.get_index(lenient=self.lod_grid.config.lenient,lod=self.lod)
+            lod_index = self.lod_grid.get_index(
+                lenient=self.lod_grid.config.lenient, lod=self.lod
+            )
             lod = await self.lod_grid.get_selected_lod(lod_index=lod_index)
-            if len(lod)==0:
+            if len(lod) == 0:
                 with self.result_row:
                     ui.notify("Please select at least one row")
                     return
@@ -219,7 +220,7 @@ WHERE {
 
     def update_lod(self, lod: list, with_select: bool = True):
         """Update grid with list of dicts data"""
-        self.lod=lod
+        self.lod = lod
         view_lod = self.get_view_lod(lod)
         # Configure grid with checkbox selection
         grid_config = GridConfig(

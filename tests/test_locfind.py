@@ -24,7 +24,7 @@ class TestLocFinder(Basetest):
         test finding location of a wikidata item
         """
         locfinder = LocFinder()
-        locfinder.debug=self.debug
+        locfinder.debug = self.debug
         # Test with Gare de Biarritz (Q1959795)
         qid = "Q1959795"
         expected = {
@@ -74,14 +74,21 @@ class TestLocFinder(Basetest):
     def test_get_nearest_train_station(self):
         """
         test get_nearest_train_station
+
+        the station count of a radius drifts with the wikidata content so
+        the radius and the ordering are checked instead of an exact count
         """
         lat = 43.2661645
         long = -1.9749167
         distance = 10
         locfinder = LocFinder()
         results = locfinder.get_train_stations_by_coordinates(lat, long, distance)
-        print(results)
-        self.assertGreaterEqual(len(results), 30)
+        if self.debug:
+            print(results)
+        self.assertGreaterEqual(len(results), 20)
+        distances = list(results["distance_km"])
+        self.assertLessEqual(max(distances), distance)
+        self.assertEqual(sorted(distances), distances)
 
     def test_get_bike_nodes_heeg_stavoren(self):
         """

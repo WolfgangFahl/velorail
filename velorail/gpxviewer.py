@@ -6,12 +6,15 @@ Created on 2025-01-17
 
 import argparse
 import re
+from pathlib import Path
 from typing import Optional
+from urllib.parse import urlparse
 
 import gpxpy
 import requests
 from ngwidgets.leaflet_map import LeafletMap
 
+from velorail.gpx import GpxRoutes
 from velorail.tour import Leg, LegStyle, LegStyles, Loc, Tour
 
 
@@ -20,10 +23,13 @@ class GPXViewer:
     display a given gpx file
     """
 
+    # the Vía Verde del Fc Vasco Navarro sample used to be served by
+    # ebike.bitplan.com which answers every request with a login page since
+    # 2026-08-04 - the file is shipped in velorail_examples instead
     samples = {
         "Mountain bike loop at Middlesex Fells reservation.": "https://www.topografix.com/fells_loop.gpx",
         "Via Verde de Arditurri": "https://www.bahntrassenradwege.de/images/Spanien/Baskenland/V-v-de-arditurri/Arditurri2.gpx",
-        "Vía Verde del Fc Vasco Navarro": "https://ebike.bitplan.com/images/ebike/e/ec/VV-del-FC-Vasco-Navarro_fdmi1644.gpx",
+        "Vía Verde del Fc Vasco Navarro": "https://raw.githubusercontent.com/WolfgangFahl/velorail/main/velorail_examples/VV-del-FC-Vasco-Navarro.gpx",
     }
     default_center = [51.4934, 0.0098]  # greenwich
     default_zoom = 11
@@ -56,20 +62,36 @@ class GPXViewer:
             self.zoom = GPXViewer.default_zoom
             self.center = GPXViewer.default_center
 
-
-    def load_gpx(self, gpx_url: str):
+    def load_gpx(self, gpx_source: str) -> gpxpy.gpx.GPX:
         """
-        Load the given GPX file from URL and parse it.
+        Load the gpx data from the given url or file path and parse it.
+
+        Args:
+            gpx_source: the url or local path of the gpx file to load
+
+        Returns:
+            gpxpy.gpx.GPX: the parsed gpx data
+
+        Raises:
+            RuntimeError: if the source does not deliver parseable gpx markup
         """
         try:
-            response = requests.get(gpx_url, timeout=10)
-            response.raise_for_status()
-            self.gpx = gpxpy.parse(response.text)
+            if urlparse(gpx_source).scheme in ("http", "https"):
+                response = requests.get(gpx_source, timeout=10)
+                response.raise_for_status()
+                gpx_text = GpxRoutes.text_of_response(response, gpx_source)
+            else:
+                gpx_text = Path(gpx_source).read_text()
+            self.gpx = gpxpy.parse(gpx_text)
             self.get_points(self.gpx)
-            return self.gpx
-        except (requests.RequestException, gpxpy.gpx.GPXXMLSyntaxException) as e:
-            raise RuntimeError(f"Failed to load GPX from {gpx_url}: {e}")
-
+        except (
+            OSError,
+            requests.RequestException,
+            gpxpy.gpx.GPXXMLSyntaxException,
+            ValueError,
+        ) as e:
+            raise RuntimeError(f"Failed to load GPX from {gpx_source}: {e}")
+        return self.gpx
 
     def set_center(self):
         """

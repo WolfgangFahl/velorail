@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="velorail" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Vennbahn leg</name>
+    <desc>Example leg of the Vennbahn railway trail south east of Aachen</desc>
+  </metadata>
+  <trk>
+    <name>Rothe Erde - Kornelimuenster</name>
+    <trkseg>
+      <trkpt lat="50.7686" lon="6.1180"><name>Aachen Rothe Erde</name></trkpt>
+      <trkpt lat="50.7561" lon="6.1385"><name>Brand</name></trkpt>
+      <trkpt lat="50.7422" lon="6.1642"><name>Walheim junction</name></trkpt>
+      <trkpt lat="50.7300" lon="6.1830"><name>Kornelimuenster</name></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

@@ -171,3 +171,8 @@ cython_debug/
 .pypirc
 # docs
 docs
+
+# macOS Finder metadata
+.DS_Store
+.AppleDouble
+.LSOverride

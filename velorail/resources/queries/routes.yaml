@@ -1,0 +1,85 @@
+# Named parameterized Queries for bounding box route lookup
+# https://github.com/WolfgangFahl/velorail/issues/5
+# WF 2026-08-04
+#
+# The bounding box is passed as a WKT polygon in lon lat order.
+# QLever evaluates geof:sfIntersects only when both arguments are variables,
+# so the target area is bound via BIND before it is used in the FILTER.
+'TrainRoutes4Bounds':
+  # train and railway route relations intersecting the given bounding box
+  param_list:
+    - name: south
+      type: float
+      default_value: 50.7
+    - name: west
+      type: float
+      default_value: 5.9
+    - name: north
+      type: float
+      default_value: 50.85
+    - name: east
+      type: float
+      default_value: 6.2
+    - name: limit
+      type: int
+      default_value: 100
+  sparql: |
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+    PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>
+
+    SELECT DISTINCT ?rel ?route_type ?name ?ref ?network ?from ?to
+    WHERE {
+      BIND("POLYGON(({{west}} {{south}},{{east}} {{south}},{{east}} {{north}},{{west}} {{north}},{{west}} {{south}}))"^^geo:wktLiteral AS ?area)
+      VALUES ?route_type { "train" "railway" }
+      ?rel osmkey:type "route" ;
+           osmkey:route ?route_type ;
+           geo:hasGeometry/geo:asWKT ?wkt .
+      FILTER(geof:sfIntersects(?wkt, ?area))
+      OPTIONAL { ?rel osmkey:name ?name }
+      OPTIONAL { ?rel osmkey:ref ?ref }
+      OPTIONAL { ?rel osmkey:network ?network }
+      OPTIONAL { ?rel osmkey:from ?from }
+      OPTIONAL { ?rel osmkey:to ?to }
+    }
+    ORDER BY ?route_type ?name
+    LIMIT {{limit}}
+'BikeRoutes4Bounds':
+  # bicycle and mtb route relations intersecting the given bounding box
+  param_list:
+    - name: south
+      type: float
+      default_value: 50.75
+    - name: west
+      type: float
+      default_value: 6.05
+    - name: north
+      type: float
+      default_value: 50.80
+    - name: east
+      type: float
+      default_value: 6.12
+    - name: limit
+      type: int
+      default_value: 100
+  sparql: |
+    PREFIX geo: <http://www.opengis.net/ont/geosparql#>
+    PREFIX geof: <http://www.opengis.net/def/function/geosparql/>
+    PREFIX osmkey: <https://www.openstreetmap.org/wiki/Key:>
+
+    SELECT DISTINCT ?rel ?route_type ?name ?ref ?network ?from ?to
+    WHERE {
+      BIND("POLYGON(({{west}} {{south}},{{east}} {{south}},{{east}} {{north}},{{west}} {{north}},{{west}} {{south}}))"^^geo:wktLiteral AS ?area)
+      VALUES ?route_type { "bicycle" "mtb" }
+      ?rel osmkey:type "route" ;
+           osmkey:route ?route_type ;
+           geo:hasGeometry/geo:asWKT ?wkt .
+      FILTER(geof:sfIntersects(?wkt, ?area))
+      OPTIONAL { ?rel osmkey:name ?name }
+      OPTIONAL { ?rel osmkey:ref ?ref }
+      OPTIONAL { ?rel osmkey:network ?network }
+      OPTIONAL { ?rel osmkey:from ?from }
+      OPTIONAL { ?rel osmkey:to ?to }
+    }
+    ORDER BY ?route_type ?name
+    LIMIT {{limit}}

@@ -6,21 +6,26 @@ Created on 2025-02-01
 
 import os
 import re
+from dataclasses import asdict
 
 from ez_wikidata.wdproperty import WikidataPropertyManager
+from fastapi import Body
 from ngwidgets.input_webserver import InputWebserver, InputWebSolution
+from ngwidgets.sso_users_solution import SsoSolution
+from ngwidgets.task_runner import TaskRunner
 from ngwidgets.webserver import WebserverConfig
 from ngwidgets.widgets import Lang, Link
 from nicegui import Client, app, ui
 
+from velorail.bbox import BBox
 from velorail.explore import Explorer, TriplePos
 from velorail.explore_view import ExplorerView
+from velorail.gpx import GpxRoutes
 from velorail.gpxviewer import GPXViewer
 from velorail.locfind import LocFinder
-from ngwidgets.sso_users_solution import SsoSolution
+from velorail.routefind import RouteFinder
 from velorail.version import Version
 from velorail.wditem_search import WikidataItemSearch
-from ngwidgets.task_runner import TaskRunner
 
 
 class VeloRailSolution(InputWebSolution):
@@ -42,7 +47,7 @@ class VeloRailSolution(InputWebSolution):
         self.lang = self.args.lang
         self.wpm = self.webserver.wpm
         self.viewer = GPXViewer(args=self.args)
-        self.task_runner=TaskRunner()
+        self.task_runner = TaskRunner()
 
     def configure_menu(self):
         """
@@ -71,6 +76,7 @@ class VeloRailSolution(InputWebSolution):
         Args:
             qid(str): the Wikidata id of the item to analyze
         """
+
         def show():
             viewer = self.viewer
             # Create LocFinder and get coordinates
@@ -244,6 +250,7 @@ class VeloRailWebServer(InputWebserver):
 
         # Initialize property manager instance
         self.wpm = WikidataPropertyManager.get_instance()
+        self.route_finder = None
 
         @ui.page("/explore/{node_id}")
         async def explorer_page(
@@ -327,6 +334,148 @@ class VeloRailWebServer(InputWebserver):
                 return {"status": "ok", "records": lod}
             except Exception as ex:
                 return {"status": "error", "message": str(ex)}
+
+        @app.get("/api/routes/bbox")
+        async def routes_bbox_api(
+            south: float,
+            west: float,
+            north: float,
+            east: float,
+            sources: str = "train,bike",
+            endpoint_name: str = "osm-qlever",
+            limit: int = 100,
+        ):
+            """
+            Find OpenStreetMap route relations intersecting a bounding box
+
+            Args:
+                south: southern latitude boundary
+                west: western longitude boundary
+                north: northern latitude boundary
+                east: eastern longitude boundary
+                sources: comma separated sources - train and/or bike
+                endpoint_name: name of the SPARQL endpoint to use
+                limit: maximum number of routes per source
+
+            Returns:
+                dict: JSON response with the matching route records
+            """
+            try:
+                bbox = BBox(south=south, west=west, north=north, east=east)
+                source_list = [source.strip() for source in sources.split(",")]
+                source_list = [source for source in source_list if source]
+                route_finder = self.get_route_finder()
+                lod = route_finder.get_routes(
+                    sources=source_list,
+                    bbox=bbox,
+                    endpoint=endpoint_name,
+                    limit=limit,
+                )
+                result = {
+                    "status": "ok",
+                    "bbox": asdict(bbox),
+                    "sources": source_list,
+                    "records": lod,
+                }
+            except Exception as ex:
+                result = {"status": "error", "message": str(ex)}
+            return result
+
+        @app.get("/api/gpx/bbox")
+        async def gpx_bbox_url_api(
+            gpx_url: str,
+            south: float,
+            west: float,
+            north: float,
+            east: float,
+            mode: str = "overlap",
+        ):
+            """
+            Find the routes of a referenced gpx file matching a bounding box
+
+            Args:
+                gpx_url: url of the gpx file to check
+                south: southern latitude boundary
+                west: western longitude boundary
+                north: northern latitude boundary
+                east: eastern longitude boundary
+                mode: overlap or contained
+
+            Returns:
+                dict: JSON response with the matching gpx routes
+            """
+            try:
+                bbox = BBox(south=south, west=west, north=north, east=east)
+                gpx_routes = GpxRoutes.of_url(gpx_url)
+                result = self.gpx_bbox_result(gpx_routes, bbox, mode)
+            except Exception as ex:
+                result = {"status": "error", "message": str(ex)}
+            return result
+
+        @app.post("/api/gpx/bbox")
+        async def gpx_bbox_post_api(
+            south: float,
+            west: float,
+            north: float,
+            east: float,
+            mode: str = "overlap",
+            gpx_text: str = Body(..., media_type="application/gpx+xml"),
+        ):
+            """
+            Find the routes of a posted gpx file matching a bounding box
+
+            Args:
+                south: southern latitude boundary
+                west: western longitude boundary
+                north: northern latitude boundary
+                east: eastern longitude boundary
+                mode: overlap or contained
+                gpx_text: the gpx markup to check
+
+            Returns:
+                dict: JSON response with the matching gpx routes
+            """
+            try:
+                bbox = BBox(south=south, west=west, north=north, east=east)
+                gpx_routes = GpxRoutes.of_text(gpx_text)
+                result = self.gpx_bbox_result(gpx_routes, bbox, mode)
+            except Exception as ex:
+                result = {"status": "error", "message": str(ex)}
+            return result
+
+    def get_route_finder(self) -> RouteFinder:
+        """
+        Get my route finder creating it on first use.
+
+        Returns:
+            RouteFinder: the route finder for bounding box queries
+        """
+        if self.route_finder is None:
+            self.route_finder = RouteFinder()
+        return self.route_finder
+
+    def gpx_bbox_result(self, gpx_routes: GpxRoutes, bbox: BBox, mode: str) -> dict:
+        """
+        Get the REST API result for the given gpx routes and bounding box.
+
+        Args:
+            gpx_routes: the routes of the gpx file
+            bbox: the target bounding box
+            mode: overlap or contained
+
+        Returns:
+            dict: JSON response with the matching gpx routes
+        """
+        matching = gpx_routes.routes_in_bbox(bbox, mode=mode)
+        result = {
+            "status": "ok",
+            "source": gpx_routes.source,
+            "mode": mode,
+            "bbox": asdict(bbox),
+            "route_count": len(gpx_routes.routes),
+            "records": [asdict(route) for route in matching],
+        }
+        return result
 
     def configure_run(self):
         root_path = (

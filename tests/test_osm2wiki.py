@@ -92,13 +92,13 @@ class TestOsm2wiki(Basetest):
         """
         test the converter
         """
-        debug=self.debug
-        #debug=True
+        debug = self.debug
+        # debug=True
         for osm_item, role, transport, loc_type, expected_nodes, min_node_distance in [
-            ("relation/18343947", "member", "train", "train station",  53, 6000),
-            ("relation/3421095" , "member", "bike",  "bike-waypoint",  29, 2000),
-            ("relation/1713826" , "member", "bike",  "bike-waypoint",  10, 2500),
-            ("relation/10492086", "stop"  , "train", "train station",  21, 8000),
+            ("relation/18343947", "member", "train", "train station", 53, 6000),
+            ("relation/3421095", "member", "bike", "bike-waypoint", 29, 2000),
+            ("relation/1713826", "member", "bike", "bike-waypoint", 10, 2500),
+            ("relation/10492086", "stop", "train", "train station", 21, 8000),
         ]:
             args = Namespace(
                 debug=self.debug,
@@ -125,11 +125,13 @@ class TestOsm2wiki(Basetest):
 
             # Process the relations
             lod = converter.process_osm_items(args.osm_items)
-            node_count=len(lod)
+            node_count = len(lod)
             if debug:
                 print(f"{loc_type}:{osm_item} {node_count} nodes")
                 print(json.dumps(lod, indent=2, default=str))
-                print(f"{loc_type}:{osm_item} {node_count} nodes expected: {expected_nodes}")
+                print(
+                    f"{loc_type}:{osm_item} {node_count} nodes expected: {expected_nodes}"
+                )
 
-            self.assertTrue(node_count >= expected_nodes,node_count)
+            self.assertTrue(node_count >= expected_nodes, node_count)
             self.assertTrue(os.path.exists(converter.wiki_file))

@@ -173,4 +173,4 @@ class TestQueryGen(Basetest):
                 if self.debug:
                     print(title)
                     print(json.dumps(record, indent=2, default=str))
-                self.assertEqual(len(record.keys()), expected_keys,title)
+                self.assertEqual(len(record.keys()), expected_keys, title)
